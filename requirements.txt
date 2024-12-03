@@ -1,1 +1,7 @@
+# requirements.txt
+Flask
+mysql-connector-python
+flask-login
+flask-wtf
+bcrypt
 
