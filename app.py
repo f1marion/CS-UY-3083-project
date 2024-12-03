@@ -81,3 +81,29 @@ def login():
     return render_template('login.html')
 
 
+# app.py (continued)
+
+@app.route('/search_flights', methods=['GET', 'POST'])
+def search_flights():
+    if request.method == 'POST':
+        source = request.form['source']
+        destination = request.form['destination']
+        departure_date = request.form['departure_date']
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            query = """
+                SELECT * FROM Flight
+                WHERE Departure_airport = %s AND Arrival_airport = %s AND DATE(Departure_date_time) = %s
+            """
+            cursor.execute(query, (source, destination, departure_date))
+            flights = cursor.fetchall()
+        finally:
+            cursor.close()
+            conn.close()
+        return render_template('flight_results.html', flights=flights)
+    return render_template('search_flights.html')
+
+
+
+
