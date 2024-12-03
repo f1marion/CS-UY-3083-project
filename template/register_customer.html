@@ -1,1 +1,16 @@
+<!-- templates/register_customer.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Customer Registration</h2>
+<form method="post">
+    Email: <input type="email" name="email" required><br>
+    First Name: <input type="text" name="fname" required><br>
+    Last Name: <input type="text" name="lname" required><br>
+    Password: <input type="password" name="password" required><br>
+    <input type="submit" value="Register">
+</form>
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+{% endblock %}
 
