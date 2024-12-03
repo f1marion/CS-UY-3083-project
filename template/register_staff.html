@@ -1,1 +1,17 @@
+<!-- templates/register_staff.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Airline Staff Registration</h2>
+<form method="post">
+    Username: <input type="text" name="username" required><br>
+    First Name: <input type="text" name="fname" required><br>
+    Last Name: <input type="text" name="lname" required><br>
+    Airline Name: <input type="text" name="airline_name" required><br>
+    Password: <input type="password" name="password" required><br>
+    <input type="submit" value="Register">
+</form>
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+{% endblock %}
 
