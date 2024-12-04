@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add New Airport</h2>
+
+<form method="post">
+    Airport Code: <input type="text" name="code" maxlength="3" required><br>
+    Name: <input type="text" name="name" required><br>
+    City: <input type="text" name="city" required><br>
+    Country: <input type="text" name="country" required><br>
+    Type:
+    <select name="airport_type">
+        <option value="Domestic">Domestic</option>
+        <option value="International">International</option>
+    </select><br>
+    <input type="submit" value="Add Airport">
+</form>
+{% endblock %}
