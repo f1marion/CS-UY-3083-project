@@ -289,7 +289,7 @@ def cancel_trip():
     return render_template('cancel_trip.html', flights=flights)
 
 
-@app.route('/rate_flights', methods=['GET', 'POST'])
+@app.route('/rate_flights')
 def rate_flights():
     if 'username' not in session or session['user_type'] != 'customer':
         return redirect(url_for('login'))
@@ -300,7 +300,7 @@ def rate_flights():
     try:
         # Fetch past flights
         cursor.execute("""
-            SELECT Flight.*, Ticket.Ticket_ID
+            SELECT Flight.*, Ticket.Ticket_ID, Flight.Departure_date_time
             FROM Flight
             JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num AND Flight.Airline_name = Ticket.Airline_name
             WHERE Ticket.Customer_email = %s AND Flight.Arrival_date_time < NOW()
@@ -313,6 +313,7 @@ def rate_flights():
     return render_template('rate_flights.html', flights=flights)
 
 
+
 @app.route('/rate_flight/<int:ticket_id>', methods=['GET', 'POST'])
 def rate_flight(ticket_id):
     if 'username' not in session or session['user_type'] != 'customer':
@@ -320,11 +321,11 @@ def rate_flight(ticket_id):
 
     email = session['username']
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
-        # Verify that the ticket belongs to the user
+        # Verify that the ticket belongs to the user and get flight details
         cursor.execute("""
-            SELECT Flight.*
+            SELECT Flight.*, Ticket.Ticket_ID, Flight.Departure_date_time
             FROM Flight
             JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num AND Flight.Airline_name = Ticket.Airline_name
             WHERE Ticket.Ticket_ID = %s AND Ticket.Customer_email = %s
@@ -335,14 +336,23 @@ def rate_flight(ticket_id):
             return render_template('error.html', error=error)
 
         if request.method == 'POST':
-            rating = request.form['rating']
+            rating = int(request.form['rating'])
             comment = request.form['comment']
-            # Insert rating and comment into the database
+
+            # Validate rating
+            if rating < 1 or rating > 5:
+                error = 'Rating must be between 1 and 5.'
+                return render_template('rate_flight.html', flight=flight, error=error)
+
+            # Insert or update review in the 'reviews' table
             cursor.execute("""
-                INSERT INTO Rate (Ticket_ID, Rating, Comment)
-                VALUES (%s, %s, %s)
-                ON DUPLICATE KEY UPDATE Rating = %s, Comment = %s
-            """, (ticket_id, rating, comment, rating, comment))
+                INSERT INTO reviews (Email, Airline_name, Flight_num, Departure_date_time, Ratings, Comments)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE Ratings = %s, Comments = %s
+            """, (
+                email, flight['Airline_name'], flight['Flight_num'], flight['Departure_date_time'],
+                rating, comment, rating, comment
+            ))
             conn.commit()
             message = 'Your feedback has been submitted.'
             return render_template('success.html', message=message)
@@ -354,7 +364,20 @@ def rate_flight(ticket_id):
         cursor.close()
         conn.close()
 
-    return render_template('rate_flight.html', flight=flight)
+    # Fetch existing review if any
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT Ratings, Comments FROM reviews
+        WHERE Email = %s AND Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
+    """, (email, flight['Airline_name'], flight['Flight_num'], flight['Departure_date_time']))
+    review = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    return render_template('rate_flight.html', flight=flight, review=review)
+
+
 
 
 
