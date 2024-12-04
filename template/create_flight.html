@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create New Flight</h2>
+
+<form method="post">
+    Flight Number: <input type="text" name="flight_num" required><br>
+    Departure Airport Code: <input type="text" name="departure_airport" required><br>
+    Arrival Airport Code: <input type="text" name="arrival_airport" required><br>
+    Departure DateTime: <input type="datetime-local" name="departure_date_time" required><br>
+    Arrival DateTime: <input type="datetime-local" name="arrival_date_time" required><br>
+    Base Price: <input type="number" name="base_price" step="0.01" required><br>
+    Plane ID: <input type="text" name="plane_id" required><br>
+    Status:
+    <select name="status">
+        <option value="On-Time">On-Time</option>
+        <option value="Delayed">Delayed</option>
+    </select><br>
+    <input type="submit" value="Create Flight">
+</form>
+{% endblock %}
