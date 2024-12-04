@@ -735,6 +735,174 @@ def view_comments(flight_num, departure_date_time):
 
     return render_template('view_comments.html', reviews=reviews, flight_num=flight_num)
 
+@app.route('/schedule_maintenance', methods=['GET', 'POST'])
+def schedule_maintenance():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get airline name associated with the staff member
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    # Fetch airplanes owned by the airline
+    cursor.execute("SELECT * FROM Airplane WHERE Airline_name = %s", (airline,))
+    airplanes = cursor.fetchall()
+
+    if request.method == 'POST':
+        plane_id = request.form['plane_id']
+        start_datetime = request.form['start_datetime']
+        end_datetime = request.form['end_datetime']
+
+        # Check if airplane is available (not under maintenance or assigned to a flight during that period)
+        try:
+            # Check for overlapping maintenance schedules
+            cursor.execute("""
+                SELECT * FROM Maintenance
+                WHERE Airline_name = %s AND Plane_ID = %s
+                AND (
+                    (%s BETWEEN Start_datetime AND End_datetime) OR
+                    (%s BETWEEN Start_datetime AND End_datetime) OR
+                    (Start_datetime BETWEEN %s AND %s)
+                )
+            """, (airline, plane_id, start_datetime, end_datetime, start_datetime, end_datetime))
+            maintenance_conflicts = cursor.fetchall()
+
+            # Check for flights assigned to the airplane during that period
+            cursor.execute("""
+                SELECT * FROM Flight
+                WHERE Airline_name = %s AND Plane_ID = %s
+                AND (
+                    Departure_date_time BETWEEN %s AND %s OR
+                    Arrival_date_time BETWEEN %s AND %s
+                )
+            """, (airline, plane_id, start_datetime, end_datetime, start_datetime, end_datetime))
+            flight_conflicts = cursor.fetchall()
+
+            if maintenance_conflicts or flight_conflicts:
+                error = "The airplane is already scheduled for maintenance or assigned to a flight during this period."
+                return render_template('schedule_maintenance.html', airplanes=airplanes, error=error)
+
+            # Schedule maintenance
+            cursor.execute("""
+                INSERT INTO Maintenance (Airline_name, Plane_ID, Start_datetime, End_datetime)
+                VALUES (%s, %s, %s, %s)
+            """, (airline, plane_id, start_datetime, end_datetime))
+            conn.commit()
+            message = "Maintenance scheduled successfully."
+            return render_template('success.html', message=message)
+        except Exception as e:
+            conn.rollback()
+            error = f"An error occurred: {str(e)}"
+            return render_template('error.html', error=error)
+    cursor.close()
+    conn.close()
+    return render_template('schedule_maintenance.html', airplanes=airplanes)
+
+
+@app.route('/view_frequent_customers', methods=['GET', 'POST'])
+def view_frequent_customers():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    # Calculate date one year ago
+    one_year_ago = datetime.now() - timedelta(days=365)
+
+    # Get frequent customers
+    cursor.execute("""
+        SELECT Customer.Email, Customer.Fname, Customer.Lname, COUNT(*) AS flight_count
+        FROM Ticket
+        JOIN Customer ON Ticket.Customer_email = Customer.Email
+        WHERE Ticket.Airline_name = %s AND Ticket.Purchase_date_time >= %s
+        GROUP BY Customer.Email
+        ORDER BY flight_count DESC
+        LIMIT 5
+    """, (airline, one_year_ago))
+    frequent_customers = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return render_template('view_frequent_customers.html', frequent_customers=frequent_customers)
+
+
+@app.route('/view_customer_flights/<customer_email>')
+def view_customer_flights(customer_email):
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    customer_email = unquote_plus(customer_email)
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    # Get customer flights
+    cursor.execute("""
+        SELECT Flight.*
+        FROM Flight
+        JOIN Ticket ON Flight.Airline_name = Ticket.Airline_name
+                     AND Flight.Flight_num = Ticket.Flight_num
+                     AND Flight.Departure_date_time = Ticket.Departure_date_time
+        WHERE Ticket.Customer_email = %s AND Flight.Airline_name = %s
+    """, (customer_email, airline))
+    flights = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return render_template('view_customer_flights.html', flights=flights, customer_email=customer_email)
+
+
+@app.route('/view_revenue', methods=['GET'])
+def view_revenue():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()[0]
+
+    # Calculate dates
+    today = datetime.now()
+    one_month_ago = today - timedelta(days=30)
+    one_year_ago = today - timedelta(days=365)
+
+    # Revenue in the last month
+    cursor.execute("""
+        SELECT SUM(Sold_Price) FROM Ticket
+        WHERE Airline_name = %s AND Purchase_date_time >= %s
+    """, (airline, one_month_ago))
+    month_revenue = cursor.fetchone()[0] or 0.0
+
+    # Revenue in the last year
+    cursor.execute("""
+        SELECT SUM(Sold_Price) FROM Ticket
+        WHERE Airline_name = %s AND Purchase_date_time >= %s
+    """, (airline, one_year_ago))
+    year_revenue = cursor.fetchone()[0] or 0.0
+
+    cursor.close()
+    conn.close()
+    return render_template('view_revenue.html', month_revenue=month_revenue, year_revenue=year_revenue)
+
+
 
 
 
