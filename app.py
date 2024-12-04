@@ -266,6 +266,109 @@ def track_spending():
 
     return render_template('track_spending.html', total_spent=total_spent)
 
+@app.route('/cancel_ticket/<int:ticket_id>', methods=['GET', 'POST'])
+def cancel_ticket(ticket_id):
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+
+    email = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Verify that the ticket belongs to the user
+        cursor.execute("""
+            SELECT * FROM Ticket
+            WHERE Ticket_ID = %s AND Customer_email = %s
+        """, (ticket_id, email))
+        ticket = cursor.fetchone()
+        if not ticket:
+            error = 'Ticket not found or does not belong to you.'
+            return render_template('error.html', error=error)
+
+        # Delete the ticket
+        cursor.execute("""
+            DELETE FROM Ticket WHERE Ticket_ID = %s
+        """, (ticket_id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        error = f'An error occurred: {str(e)}'
+        return render_template('error.html', error=error)
+    finally:
+        cursor.close()
+        conn.close()
+
+    message = 'Your trip has been successfully cancelled.'
+    return render_template('success.html', message=message)
+
+@app.route('/rate_flights', methods=['GET', 'POST'])
+def rate_flights():
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+
+    email = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Fetch past flights
+        cursor.execute("""
+            SELECT Flight.*, Ticket.Ticket_ID
+            FROM Flight
+            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num AND Flight.Airline_name = Ticket.Airline_name
+            WHERE Ticket.Customer_email = %s AND Flight.Arrival_date_time < NOW()
+        """, (email,))
+        flights = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('rate_flights.html', flights=flights)
+
+
+@app.route('/rate_flight/<int:ticket_id>', methods=['GET', 'POST'])
+def rate_flight(ticket_id):
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+
+    email = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Verify that the ticket belongs to the user
+        cursor.execute("""
+            SELECT Flight.*
+            FROM Flight
+            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num AND Flight.Airline_name = Ticket.Airline_name
+            WHERE Ticket.Ticket_ID = %s AND Ticket.Customer_email = %s
+        """, (ticket_id, email))
+        flight = cursor.fetchone()
+        if not flight:
+            error = 'Flight not found or does not belong to you.'
+            return render_template('error.html', error=error)
+
+        if request.method == 'POST':
+            rating = request.form['rating']
+            comment = request.form['comment']
+            # Insert rating and comment into the database
+            cursor.execute("""
+                INSERT INTO Rate (Ticket_ID, Rating, Comment)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE Rating = %s, Comment = %s
+            """, (ticket_id, rating, comment, rating, comment))
+            conn.commit()
+            message = 'Your feedback has been submitted.'
+            return render_template('success.html', message=message)
+    except Exception as e:
+        conn.rollback()
+        error = f'An error occurred: {str(e)}'
+        return render_template('error.html', error=error)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('rate_flight.html', flight=flight)
+
+
 
 @app.route('/logout')
 def logout():
