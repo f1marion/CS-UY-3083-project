@@ -1,0 +1,11 @@
+<!-- templates/search_flights.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Search Flights</h2>
+<form method="post">
+    Source Airport Code: <input type="text" name="source" required><br>
+    Destination Airport Code: <input type="text" name="destination" required><br>
+    Departure Date: <input type="date" name="departure_date" required><br>
+    <input type="submit" value="Search">
+</form>
+{% endblock %}
