@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from db_connection import get_db_connection
 import bcrypt
-
+ 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
