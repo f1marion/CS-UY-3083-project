@@ -26,6 +26,8 @@ def url_encode(s):
 def url_encode(s):
     return quote(str(s))
 
+from flask import flash  # Import flash for messaging
+
 @app.route('/register_customer', methods=['GET', 'POST'])
 def register_customer():
     if request.method == 'POST':
@@ -62,8 +64,9 @@ def register_customer():
                 passport_country, dob
             ))
             conn.commit()
-            message = "Registration successful. Please log in."
-            return render_template('login.html', message=message)
+            # Instead of rendering the login template, redirect to the login route
+            flash("Registration successful. Please log in.")
+            return redirect(url_for('login'))
         except Exception as e:
             conn.rollback()
             error = f"An error occurred: {str(e)}"
@@ -72,6 +75,7 @@ def register_customer():
             cursor.close()
             conn.close()
     return render_template('register_customer.html')
+
 
 
 @app.route('/register_staff', methods=['GET', 'POST'])
