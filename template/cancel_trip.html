@@ -1,0 +1,31 @@
+<!-- templates/cancel_trip.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Cancel a Trip</h2>
+{% if flights %}
+    <table>
+        <tr>
+            <th>Flight Number</th>
+            <th>Airline</th>
+            <th>Departure</th>
+            <th>Arrival</th>
+            <th>Date & Time</th>
+            <th>Action</th>
+        </tr>
+        {% for flight in flights %}
+        <tr>
+            <td>{{ flight.Flight_num }}</td>
+            <td>{{ flight.Airline_name }}</td>
+            <td>{{ flight.Departure_airport }}</td>
+            <td>{{ flight.Arrival_airport }}</td>
+            <td>{{ flight.Departure_date_time }}</td>
+            <td>
+                <a href="{{ url_for('cancel_ticket', ticket_id=flight.Ticket_ID) }}">Cancel Trip</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>You have no trips to cancel.</p>
+{% endif %}
+{% endblock %}
