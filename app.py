@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from db_connection import get_db_connection
 from datetime import datetime
+from urllib.parse import quote, unquote
 import bcrypt
  
 app = Flask(__name__)
@@ -199,9 +200,6 @@ def my_flights():
 
 
 # app.py (continued)
-
-
-from urllib.parse import quote, unquote
 
 @app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
 def purchase_ticket(airline_name, flight_num, departure_date_time):
