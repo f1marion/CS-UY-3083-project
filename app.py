@@ -201,12 +201,18 @@ def my_flights():
 # app.py (continued)
 
 
-@app.route('/purchase_ticket/<airline_name>/<flight_num>', methods=['GET', 'POST'])
-def purchase_ticket(airline_name, flight_num):
+from urllib.parse import quote, unquote
+
+@app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
+def purchase_ticket(airline_name, flight_num, departure_date_time):
     if 'username' not in session or session['user_type'] != 'customer':
         return redirect(url_for('login'))
 
     email = session['username']
+
+    # Decode and parse the departure_date_time
+    departure_date_time = unquote(departure_date_time)
+    departure_date_time = datetime.strptime(departure_date_time, '%Y-%m-%d %H:%M:%S')
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -216,8 +222,8 @@ def purchase_ticket(airline_name, flight_num):
             SELECT Flight.*, Airplane.Num_seats
             FROM Flight
             JOIN Airplane ON Flight.Airline_name = Airplane.Airline_name AND Flight.Plane_ID = Airplane.Plane_ID
-            WHERE Flight.Airline_name = %s AND Flight.Flight_num = %s
-        """, (airline_name, flight_num))
+            WHERE Flight.Airline_name = %s AND Flight.Flight_num = %s AND Flight.Departure_date_time = %s
+        """, (airline_name, flight_num, departure_date_time))
         flight = cursor.fetchone()
         if not flight:
             error = 'Flight not found.'
@@ -258,14 +264,14 @@ def purchase_ticket(airline_name, flight_num):
                 Purchase_date_time, Flight_num, Airline_name, Departure_date_time, Customer_email)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (new_ticket_id, traveler_Fname, traveler_Lname, traveler_DOB, sold_price, card_type, card_number, name_on_card, expiration_date,
-                  purchase_date_time, flight_num, airline_name, flight['Departure_date_time'], email))
+                  purchase_date_time, flight_num, airline_name, departure_date_time, email))
 
             # Update Seats_booked in Flight table
             cursor.execute("""
                 UPDATE Flight
                 SET Seats_booked = Seats_booked + 1
-                WHERE Airline_name = %s AND Flight_num = %s
-            """, (airline_name, flight_num))
+                WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
+            """, (airline_name, flight_num, departure_date_time))
 
             conn.commit()
 
@@ -281,6 +287,7 @@ def purchase_ticket(airline_name, flight_num):
         conn.close()
 
     return render_template('purchase_ticket.html', flight=flight)
+
 
 
 
