@@ -1,0 +1,34 @@
+<!-- templates/my_flights.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>My Upcoming Flights</h2>
+{% if flights %}
+<table border="1">
+    <tr>
+        <th>Flight Number</th>
+        <th>Airline</th>
+        <th>Departure Time</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Airline_name }}</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td>{{ flight.Arrival_date_time }}</td>
+        <td>{{ flight.Status }}</td>
+        <td>
+            <form action="{{ url_for('cancel_ticket', ticket_id=flight.Ticket_ID) }}" method="post" style="display:inline;">
+                <input type="submit" value="Cancel">
+            </form>
+            <a href="{{ url_for('rate_flight', flight_id=flight.Flight_num) }}">Rate Flight</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>You have no upcoming flights.</p>
+{% endif %}
+{% endblock %}
