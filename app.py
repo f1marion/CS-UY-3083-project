@@ -670,37 +670,44 @@ def add_airplane():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get airline name
+    # Get airline name associated with the staff member
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
     airline = cursor.fetchone()['Airline_name']
 
     if request.method == 'POST':
         plane_id = request.form['plane_id']
         num_seats = request.form['num_seats']
-        manufacturer = request.form['manufacturer']
+        manufacturing_company = request.form['manufacturing_company']
+        model_number = request.form['model_number']
+        manufacturing_date = request.form['manufacturing_date']
         age = request.form['age']
 
         try:
             cursor.execute("""
-                INSERT INTO Airplane (Airline_name, Plane_ID, Num_seats, Manufacturer, Age)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (airline, plane_id, num_seats, manufacturer, age))
+                INSERT INTO Airplane (Airline_name, Plane_ID, Num_seats, Manufacturing_company, Model_number, Manufacturing_date, Age)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (airline, plane_id, num_seats, manufacturing_company, model_number, manufacturing_date, age))
             conn.commit()
             message = "Airplane added successfully."
-            # Fetch all airplanes
+
+            # Fetch all airplanes to display
             cursor.execute("SELECT * FROM Airplane WHERE Airline_name = %s", (airline,))
             airplanes = cursor.fetchall()
             return render_template('view_airplanes.html', airplanes=airplanes, message=message)
         except Exception as e:
             conn.rollback()
             error = f"An error occurred: {str(e)}"
-            return render_template('error.html', error=error)
+            return render_template('add_airplane.html', error=error)
+        finally:
+            cursor.close()
+            conn.close()
 
     cursor.execute("SELECT * FROM Airplane WHERE Airline_name = %s", (airline,))
     airplanes = cursor.fetchall()
     cursor.close()
     conn.close()
     return render_template('add_airplane.html', airplanes=airplanes)
+
 
 
 @app.route('/add_airport', methods=['GET', 'POST'])
