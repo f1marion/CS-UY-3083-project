@@ -1,35 +1,25 @@
 <!-- templates/flight_results.html -->
-
 {% extends "base.html" %}
-
 {% block content %}
-    <h1>Flight Search Results</h1>
-    <table border="1">
-        <tr>
-            <th>Airline Name</th>
-            <th>Flight Number</th>
-            <th>Departure Airport</th>
-            <th>Arrival Airport</th>
-            <th>Departure Time</th>
-            <th>Arrival Time</th>
-            <th>Price</th>
-            <th>Purchase Ticket</th>
-        </tr>
-        {% for flight in flights %}
-        <tr>
-            <td>{{ flight.Airline_name }}</td>
-            <td>{{ flight.Flight_num }}</td>
-            <td>{{ flight.Departure_airport }}</td>
-            <td>{{ flight.Arrival_airport }}</td>
-            <td>{{ flight.Departure_date_time }}</td>
-            <td>{{ flight.Arrival_date_time }}</td>
-            <td>{{ flight.Base_price }}</td>
-            <!-- Encode departure_date_time -->
-            {% set departure_time_str = flight.Departure_date_time.strftime('%Y-%m-%d %H:%M:%S') %}
-            {% set encoded_departure_time = departure_time_str | url_encode %}
-            <td><a href="{{ url_for('purchase_ticket', airline_name=flight.Airline_name, flight_num=flight.Flight_num, departure_date_time=encoded_departure_time) }}">Purchase Ticket</a></td>
-        </tr>
-        {% endfor %}
-    </table>
+<h2>Flight Search Results</h2>
+<table>
+    <tr>
+        <th>Flight Number</th>
+        <th>Airline</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Departure Time</th>
+        <th>Action</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Airline_name }}</td>
+        <td>{{ flight.Departure_airport }}</td>
+        <td>{{ flight.Arrival_airport }}</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td><a href="{{ url_for('purchase_ticket', airline_name=flight.Airline_name, flight_num=flight.Flight_num) }}">Purchase Ticket</a></td>
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}
-
