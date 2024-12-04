@@ -868,14 +868,14 @@ def schedule_maintenance():
 
         # Check if airplane is available (not under maintenance or assigned to a flight during that period)
         try:
-            # Check for overlapping maintenance schedules
+            # Adjusted column names to match database schema
             cursor.execute("""
                 SELECT * FROM Maintenance
                 WHERE Airline_name = %s AND Plane_ID = %s
                 AND (
-                    (%s BETWEEN Start_datetime AND End_datetime) OR
-                    (%s BETWEEN Start_datetime AND End_datetime) OR
-                    (Start_datetime BETWEEN %s AND %s)
+                    (%s BETWEEN Start_date_time AND End_date_time) OR
+                    (%s BETWEEN Start_date_time AND End_date_time) OR
+                    (Start_date_time BETWEEN %s AND %s)
                 )
             """, (airline, plane_id, start_datetime, end_datetime, start_datetime, end_datetime))
             maintenance_conflicts = cursor.fetchall()
@@ -889,6 +889,7 @@ def schedule_maintenance():
                     Arrival_date_time BETWEEN %s AND %s
                 )
             """, (airline, plane_id, start_datetime, end_datetime, start_datetime, end_datetime))
+
             flight_conflicts = cursor.fetchall()
 
             if maintenance_conflicts or flight_conflicts:
@@ -897,7 +898,7 @@ def schedule_maintenance():
 
             # Schedule maintenance
             cursor.execute("""
-                INSERT INTO Maintenance (Airline_name, Plane_ID, Start_datetime, End_datetime)
+                INSERT INTO Maintenance (Airline_name, Plane_ID, Start_date_time, End_date_time)
                 VALUES (%s, %s, %s, %s)
             """, (airline, plane_id, start_datetime, end_datetime))
             conn.commit()
@@ -910,6 +911,7 @@ def schedule_maintenance():
     cursor.close()
     conn.close()
     return render_template('schedule_maintenance.html', airplanes=airplanes)
+
 
 
 @app.route('/view_frequent_customers', methods=['GET', 'POST'])
