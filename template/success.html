@@ -1,0 +1,7 @@
+<!-- templates/success.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Success</h2>
+<p>{{ message }}</p>
+<a href="{{ url_for('customer_home') }}">Return to Home</a>
+{% endblock %}
