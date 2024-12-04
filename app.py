@@ -618,7 +618,7 @@ def create_flight():
         # Ensure seats_booked is a non-negative integer
         if not seats_booked.isdigit() or int(seats_booked) < 0:
             error = "Seats booked must be a non-negative integer."
-            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+            return render_template('create_flight.html', airplanes=airplanes, airports=airports, error=error)
         seats_booked = int(seats_booked)
         
         # Get the capacity of the selected airplane
@@ -629,17 +629,17 @@ def create_flight():
                 break
         if plane_capacity is None:
             error = "Invalid airplane selected."
-            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+            return render_template('create_flight.html', airplanes=airplanes, airports=airports, error=error)
         
         # Check that seats_booked does not exceed capacity
         if seats_booked > plane_capacity:
             error = f"Seats booked ({seats_booked}) cannot exceed the airplane's capacity ({plane_capacity})."
-            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+            return render_template('create_flight.html', airplanes=airplanes, airports=airports, error=error)
         
         # Ensure departure and arrival airports are different
         if departure_airport == arrival_airport:
             error = "Departure and arrival airports cannot be the same."
-            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+            return render_template('create_flight.html', airplanes=airplanes, airports=airports, error=error)
         
         # Insert flight into database
         try:
@@ -655,14 +655,14 @@ def create_flight():
         except Exception as e:
             conn.rollback()
             error = f"An error occurred: {str(e)}"
-            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+            return render_template('create_flight.html', airplanes=airplanes, airports=airports, error=error)
         finally:
             cursor.close()
             conn.close()
     else:
         cursor.close()
         conn.close()
-        return render_template('add_flight.html', airplanes=airplanes, airports=airports)
+        return render_template('create_flight.html', airplanes=airplanes, airports=airports)
 
 
 
