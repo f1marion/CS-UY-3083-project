@@ -16,11 +16,15 @@ app.secret_key = 'your_secret_key'
 def index():
     return render_template('index.html')  # Ensure you have an 'index.html' template
 
+@app.template_filter('url_encode')
+def url_encode(s):
+    from urllib.parse import quote_plus
+    return quote_plus(str(s))
 
-@app.route('/test')
-def test():
-    return 'Test page is working!'
-
+# Custom Jinja filter
+@app.template_filter('url_encode')
+def url_encode(s):
+    return quote(str(s))
 
 @app.route('/register_customer', methods=['GET', 'POST'])
 def register_customer():
@@ -205,10 +209,7 @@ def my_flights():
 
 # app.py (continued)
 
-# Custom Jinja filter
-@app.template_filter('url_encode')
-def url_encode(s):
-    return quote(str(s))
+
 
 @app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
 def purchase_ticket(airline_name, flight_num, departure_date_time):
@@ -493,6 +494,7 @@ def staff_home():
     conn.close()
 
     return render_template('staff_home.html', flights=flights)
+
 
 
 @app.route('/view_customers/<flight_num>/<departure_date_time>')
