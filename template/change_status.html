@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Change Flight Status</h2>
+
+<form method="post">
+    Flight Number: <input type="text" name="flight_num" required><br>
+    Departure DateTime: <input type="datetime-local" name="departure_date_time" required><br>
+    New Status:
+    <select name="status">
+        <option value="On-Time">On-Time</option>
+        <option value="Delayed">Delayed</option>
+    </select><br>
+    <input type="submit" value="Update Status">
+</form>
+{% endblock %}
