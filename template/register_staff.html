@@ -1,17 +1,31 @@
-<!-- templates/register_staff.html -->
 {% extends "base.html" %}
+
 {% block content %}
 <h2>Airline Staff Registration</h2>
-<form method="post">
-    Username: <input type="text" name="username" required><br>
-    First Name: <input type="text" name="fname" required><br>
-    Last Name: <input type="text" name="lname" required><br>
-    Airline Name: <input type="text" name="airline_name" required><br>
-    Password: <input type="password" name="password" required><br>
-    <input type="submit" value="Register">
-</form>
+
 {% if error %}
 <p style="color:red;">{{ error }}</p>
 {% endif %}
-{% endblock %}
 
+<form method="post">
+    <label for="username">Username:</label>
+    <input type="text" name="username" id="username" required><br>
+
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password" required><br>
+
+    <label for="fname">First Name:</label>
+    <input type="text" name="fname" id="fname" required><br>
+
+    <label for="lname">Last Name:</label>
+    <input type="text" name="lname" id="lname" required><br>
+
+    <label for="dob">Date of Birth:</label>
+    <input type="date" name="dob" id="dob" required><br>
+
+    <label for="airline_name">Airline Name:</label>
+    <input type="text" name="airline_name" id="airline_name" required><br>
+
+    <input type="submit" value="Register">
+</form>
+{% endblock %}
