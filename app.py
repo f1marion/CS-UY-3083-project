@@ -332,7 +332,7 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             # Ensure Departure_date_time is in the correct format
             if isinstance(fk_departure_date_time, datetime):
                 fk_departure_date_time = fk_departure_date_time.strftime('%Y-%m-%d %H:%M:%S')
-     
+
             # Insert into Ticket table
             cursor.execute("""
                 INSERT INTO Ticket (Ticket_ID, traveler_Fname, traveler_Lname, traveler_DOB, Sold_Price, Card_type, Card_number, Name_on_card, Expiration_date,
@@ -1039,4 +1039,3 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
