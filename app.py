@@ -443,6 +443,299 @@ def rate_flight(ticket_id):
     return render_template('rate_flight.html', flight=flight, review=review)
 
 
+@app.route('/staff_home', methods=['GET', 'POST'])
+def staff_home():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get the airline name associated with the staff member
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    # Default date range: next 30 days
+    today = datetime.now()
+    default_end_date = today + timedelta(days=30)
+
+    if request.method == 'POST':
+        # Collect filter criteria from the form
+        start_date = request.form.get('start_date') or today.strftime('%Y-%m-%d')
+        end_date = request.form.get('end_date') or default_end_date.strftime('%Y-%m-%d')
+        source = request.form.get('source')
+        destination = request.form.get('destination')
+
+        query = """
+            SELECT * FROM Flight
+            WHERE Airline_name = %s AND DATE(Departure_date_time) BETWEEN %s AND %s
+        """
+        params = [airline, start_date, end_date]
+
+        if source:
+            query += " AND Departure_airport = %s"
+            params.append(source)
+        if destination:
+            query += " AND Arrival_airport = %s"
+            params.append(destination)
+
+        cursor.execute(query, params)
+    else:
+        # Default view: next 30 days
+        cursor.execute("""
+            SELECT * FROM Flight
+            WHERE Airline_name = %s AND Departure_date_time BETWEEN %s AND %s
+        """, (airline, today, default_end_date))
+
+    flights = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('staff_home.html', flights=flights)
+
+
+@app.route('/view_customers/<flight_num>/<departure_date_time>')
+def view_customers(flight_num, departure_date_time):
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    departure_date_time = unquote_plus(departure_date_time)
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    cursor.execute("""
+        SELECT Customer.*
+        FROM Customer
+        JOIN Ticket ON Customer.Email = Ticket.Customer_email
+        WHERE Ticket.Airline_name = %s AND Ticket.Flight_num = %s AND Ticket.Departure_date_time = %s
+    """, (airline, flight_num, departure_date_time))
+
+    customers = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('view_customers.html', customers=customers)
+
+
+@app.route('/create_flight', methods=['GET', 'POST'])
+def create_flight():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()[0]
+
+    if request.method == 'POST':
+        # Collect flight data from the form
+        flight_num = request.form['flight_num']
+        departure_airport = request.form['departure_airport']
+        arrival_airport = request.form['arrival_airport']
+        departure_date_time = request.form['departure_date_time']
+        arrival_date_time = request.form['arrival_date_time']
+        base_price = request.form['base_price']
+        plane_id = request.form['plane_id']
+        status = request.form['status']
+
+        # Insert into Flight table
+        try:
+            cursor.execute("""
+                INSERT INTO Flight (Airline_name, Flight_num, Departure_date_time, Arrival_date_time,
+                                    Base_price, Plane_ID, Status, Departure_airport, Arrival_airport)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (airline, flight_num, departure_date_time, arrival_date_time, base_price, plane_id, status, departure_airport, arrival_airport))
+            conn.commit()
+            message = "Flight created successfully."
+            return render_template('success.html', message=message)
+        except Exception as e:
+            conn.rollback()
+            error = f"An error occurred: {str(e)}"
+            return render_template('error.html', error=error)
+    cursor.close()
+    conn.close()
+    return render_template('create_flight.html')
+
+
+@app.route('/change_status', methods=['GET', 'POST'])
+def change_status():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()[0]
+
+    if request.method == 'POST':
+        flight_num = request.form['flight_num']
+        departure_date_time = request.form['departure_date_time']
+        new_status = request.form['status']
+
+        try:
+            cursor.execute("""
+                UPDATE Flight
+                SET Status = %s
+                WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
+            """, (new_status, airline, flight_num, departure_date_time))
+            conn.commit()
+            message = "Flight status updated successfully."
+            return render_template('success.html', message=message)
+        except Exception as e:
+            conn.rollback()
+            error = f"An error occurred: {str(e)}"
+            return render_template('error.html', error=error)
+    cursor.close()
+    conn.close()
+    return render_template('change_status.html')
+
+
+@app.route('/add_airplane', methods=['GET', 'POST'])
+def add_airplane():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    if request.method == 'POST':
+        plane_id = request.form['plane_id']
+        num_seats = request.form['num_seats']
+        manufacturer = request.form['manufacturer']
+        age = request.form['age']
+
+        try:
+            cursor.execute("""
+                INSERT INTO Airplane (Airline_name, Plane_ID, Num_seats, Manufacturer, Age)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (airline, plane_id, num_seats, manufacturer, age))
+            conn.commit()
+            message = "Airplane added successfully."
+            # Fetch all airplanes
+            cursor.execute("SELECT * FROM Airplane WHERE Airline_name = %s", (airline,))
+            airplanes = cursor.fetchall()
+            return render_template('view_airplanes.html', airplanes=airplanes, message=message)
+        except Exception as e:
+            conn.rollback()
+            error = f"An error occurred: {str(e)}"
+            return render_template('error.html', error=error)
+
+    cursor.execute("SELECT * FROM Airplane WHERE Airline_name = %s", (airline,))
+    airplanes = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('add_airplane.html', airplanes=airplanes)
+
+
+@app.route('/add_airport', methods=['GET', 'POST'])
+def add_airport():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        code = request.form['code']
+        name = request.form['name']
+        city = request.form['city']
+        country = request.form['country']
+        airport_type = request.form['airport_type']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO Airport (Code, Name, City, Country, Type)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (code, name, city, country, airport_type))
+            conn.commit()
+            message = "Airport added successfully."
+            return render_template('success.html', message=message)
+        except Exception as e:
+            conn.rollback()
+            error = f"An error occurred: {str(e)}"
+            return render_template('error.html', error=error)
+        finally:
+            cursor.close()
+            conn.close()
+    return render_template('add_airport.html')
+
+
+@app.route('/view_ratings', methods=['GET', 'POST'])
+def view_ratings():
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    # Fetch flights with average ratings
+    cursor.execute("""
+        SELECT Flight.Flight_num, Flight.Departure_date_time,
+               AVG(Reviews.Ratings) AS average_rating
+        FROM Flight
+        LEFT JOIN Reviews ON Flight.Airline_name = Reviews.Airline_name
+                          AND Flight.Flight_num = Reviews.Flight_num
+                          AND Flight.Departure_date_time = Reviews.Departure_date_time
+        WHERE Flight.Airline_name = %s
+        GROUP BY Flight.Flight_num, Flight.Departure_date_time
+    """, (airline,))
+
+    flights = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('view_ratings.html', flights=flights)
+
+
+@app.route('/view_comments/<flight_num>/<departure_date_time>')
+def view_comments(flight_num, departure_date_time):
+    if 'username' not in session or session['user_type'] != 'staff':
+        return redirect(url_for('login'))
+
+    departure_date_time = unquote_plus(departure_date_time)
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get airline name
+    cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
+    airline = cursor.fetchone()['Airline_name']
+
+    cursor.execute("""
+        SELECT Reviews.Ratings, Reviews.Comments, Customer.Fname, Customer.Lname
+        FROM Reviews
+        JOIN Customer ON Reviews.Email = Customer.Email
+        WHERE Reviews.Airline_name = %s AND Reviews.Flight_num = %s AND Reviews.Departure_date_time = %s
+    """, (airline, flight_num, departure_date_time))
+
+    reviews = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('view_comments.html', reviews=reviews, flight_num=flight_num)
+
+
 
 
 
