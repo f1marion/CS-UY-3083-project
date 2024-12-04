@@ -3,11 +3,29 @@
 {% block content %}
 <h2>Add New Airplane</h2>
 
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
 <form method="post">
-    Plane ID: <input type="text" name="plane_id" required><br>
-    Number of Seats: <input type="number" name="num_seats" required><br>
-    Manufacturer: <input type="text" name="manufacturer"><br>
-    Age: <input type="number" name="age"><br>
+    <label for="plane_id">Plane ID:</label>
+    <input type="text" name="plane_id" id="plane_id" required><br>
+
+    <label for="num_seats">Number of Seats:</label>
+    <input type="number" name="num_seats" id="num_seats" required><br>
+
+    <label for="manufacturing_company">Manufacturing Company:</label>
+    <input type="text" name="manufacturing_company" id="manufacturing_company" required><br>
+
+    <label for="model_number">Model Number:</label>
+    <input type="text" name="model_number" id="model_number" required><br>
+
+    <label for="manufacturing_date">Manufacturing Date:</label>
+    <input type="date" name="manufacturing_date" id="manufacturing_date" required><br>
+
+    <label for="age">Age:</label>
+    <input type="number" name="age" id="age" required><br>
+
     <input type="submit" value="Add Airplane">
 </form>
 
@@ -16,14 +34,18 @@
     <tr>
         <th>Plane ID</th>
         <th>Number of Seats</th>
-        <th>Manufacturer</th>
+        <th>Manufacturing Company</th>
+        <th>Model Number</th>
+        <th>Manufacturing Date</th>
         <th>Age</th>
     </tr>
     {% for plane in airplanes %}
     <tr>
         <td>{{ plane.Plane_ID }}</td>
         <td>{{ plane.Num_seats }}</td>
-        <td>{{ plane.Manufacturer }}</td>
+        <td>{{ plane.Manufacturing_company }}</td>
+        <td>{{ plane.Model_number }}</td>
+        <td>{{ plane.Manufacturing_date }}</td>
         <td>{{ plane.Age }}</td>
     </tr>
     {% endfor %}
