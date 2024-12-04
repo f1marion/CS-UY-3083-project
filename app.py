@@ -78,6 +78,8 @@ def register_customer():
 
 
 
+from flask import flash  # Import flash for messaging
+
 @app.route('/register_staff', methods=['GET', 'POST'])
 def register_staff():
     if request.method == 'POST':
@@ -101,8 +103,10 @@ def register_staff():
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (username, hashed_password.decode('utf-8'), fname, lname, dob, airline_name))
             conn.commit()
-            message = "Registration successful. Please log in."
-            return render_template('login.html', message=message)
+            # Use flash to pass a success message
+            flash("Registration successful. Please log in.")
+            # Redirect to the login route
+            return redirect(url_for('login'))
         except Exception as e:
             conn.rollback()
             error = f"An error occurred: {str(e)}"
@@ -111,6 +115,7 @@ def register_staff():
             cursor.close()
             conn.close()
     return render_template('register_staff.html')
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
