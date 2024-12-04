@@ -1,1 +1,12 @@
+<!-- templates/staff_home.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Welcome, {{ session['username'] }}</h2>
+<ul>
+    <li><a href="{{ url_for('view_flights') }}">View All Flights</a></li>
+    <li><a href="{{ url_for('add_flight') }}">Add New Flight</a></li>
+    <li><a href="{{ url_for('view_customers') }}">View Customers</a></li>
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+</ul>
+{% endblock %}
 
