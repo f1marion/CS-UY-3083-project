@@ -1,0 +1,11 @@
+<!-- templates/flight_status.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Check Flight Status</h2>
+<form method="post">
+    Airline Name: <input type="text" name="airline_name" required><br>
+    Flight Number: <input type="text" name="flight_num" required><br>
+    Date: <input type="date" name="date" required><br>
+    <input type="submit" value="Check Status">
+</form>
+{% endblock %}
