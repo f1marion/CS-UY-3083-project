@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Schedule Maintenance</h2>
+
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
+<form method="post">
+    <label for="plane_id">Select Airplane:</label>
+    <select name="plane_id" id="plane_id" required>
+        {% for plane in airplanes %}
+        <option value="{{ plane.Plane_ID }}">{{ plane.Plane_ID }} ({{ plane.Num_seats }} seats)</option>
+        {% endfor %}
+    </select><br>
+
+    <label for="start_datetime">Start Date and Time:</label>
+    <input type="datetime-local" name="start_datetime" id="start_datetime" required><br>
+
+    <label for="end_datetime">End Date and Time:</label>
+    <input type="datetime-local" name="end_datetime" id="end_datetime" required><br>
+
+    <input type="submit" value="Schedule Maintenance">
+</form>
+{% endblock %}
