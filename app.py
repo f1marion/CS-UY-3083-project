@@ -204,6 +204,9 @@ def purchase_ticket(flight_id):
             conn.close()
         return render_template('purchase_ticket.html', flight=flight)
 
+if __name__ == '__main__':
+    app.run(debug=True)
+
 
 
 
