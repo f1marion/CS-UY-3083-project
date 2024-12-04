@@ -18,7 +18,7 @@
             <td>{{ flight.Airline_name }}</td>
             <td>{{ flight.Departure_airport }}</td>
             <td>{{ flight.Arrival_airport }}</td>
-            <td>{{ flight.Arrival_date_time }}</td>
+            <td>{{ flight.Departure_date_time }}</td>
             <td>
                 <a href="{{ url_for('rate_flight', ticket_id=flight.Ticket_ID) }}">Rate Flight</a>
             </td>
@@ -29,3 +29,4 @@
     <p>You have no past flights to rate.</p>
 {% endif %}
 {% endblock %}
+
