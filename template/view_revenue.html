@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Earned Revenue</h2>
+
+<p>Total Revenue in the Last Month: ${{ "{:.2f}".format(month_revenue) }}</p>
+<p>Total Revenue in the Last Year: ${{ "{:.2f}".format(year_revenue) }}</p>
+
+{% endblock %}
