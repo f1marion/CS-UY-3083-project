@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Flight Ratings</h2>
+
+<table border="1">
+    <tr>
+        <th>Flight Number</th>
+        <th>Departure DateTime</th>
+        <th>Average Rating</th>
+        <th>View Comments</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td>{{ flight.average_rating | default('No Ratings') }}</td>
+        <td>
+            <a href="{{ url_for('view_comments', flight_num=flight.Flight_num, departure_date_time=flight.Departure_date_time|urlencode) }}">View Comments</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
