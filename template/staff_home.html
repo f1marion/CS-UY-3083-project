@@ -1,12 +1,40 @@
-<!-- templates/staff_home.html -->
 {% extends "base.html" %}
-{% block content %}
-<h2>Welcome, {{ session['username'] }}</h2>
-<ul>
-    <li><a href="{{ url_for('view_flights') }}">View All Flights</a></li>
-    <li><a href="{{ url_for('add_flight') }}">Add New Flight</a></li>
-    <li><a href="{{ url_for('view_customers') }}">View Customers</a></li>
-    <li><a href="{{ url_for('logout') }}">Logout</a></li>
-</ul>
-{% endblock %}
 
+{% block content %}
+<h1>Welcome, {{ session['username'] }}</h1>
+
+<h2>View Flights</h2>
+
+<form method="post">
+    Start Date: <input type="date" name="start_date">
+    End Date: <input type="date" name="end_date">
+    Source Airport Code: <input type="text" name="source">
+    Destination Airport Code: <input type="text" name="destination">
+    <input type="submit" value="Filter Flights">
+</form>
+
+<table border="1">
+    <tr>
+        <th>Flight Number</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Departure Time</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>View Customers</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Departure_airport }}</td>
+        <td>{{ flight.Arrival_airport }}</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td>{{ flight.Arrival_date_time }}</td>
+        <td>{{ flight.Status }}</td>
+        <td>
+            <a href="{{ url_for('view_customers', flight_num=flight.Flight_num, departure_date_time=flight.Departure_date_time|urlencode) }}">View Customers</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
