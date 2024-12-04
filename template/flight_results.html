@@ -22,7 +22,7 @@
         <td>{{ flight.Arrival_date_time }}</td>
         <td>{{ flight.Status }}</td>
         {% if session.get('user_type') == 'customer' %}
-        <td><a href="{{ url_for('purchase_ticket', flight_id=flight.Flight_num) }}">Purchase Ticket</a></td>
+        <td><a href="{{ url_for('purchase_ticket', airline_name=flight.Airline_name, flight_num=flight.Flight_num) }}">Purchase Ticket</a></td>
         {% endif %}
     </tr>
     {% endfor %}
