@@ -3,8 +3,10 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from db_connection import get_db_connection
 from datetime import datetime
 import bcrypt
-from urllib.parse import quote, unquote, unquote_plus
+from urllib.parse import quote, unquote
 from markupsafe import Markup
+
+from urllib.parse import unquote_plus
 
  
 app = Flask(__name__)
@@ -208,8 +210,6 @@ def my_flights():
 def url_encode(s):
     return quote(str(s))
 
-from urllib.parse import unquote_plus
-
 @app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
 def purchase_ticket(airline_name, flight_num, departure_date_time):
     if 'username' not in session or session['user_type'] != 'customer':
@@ -217,18 +217,8 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
 
     email = session['username']
 
-    # Decode and parse the departure_date_time
+    # Decode the URL-encoded departure_date_time
     departure_date_time = unquote_plus(departure_date_time)
-    try:
-        # Try parsing with microseconds
-        departure_date_time_obj = datetime.strptime(departure_date_time, '%Y-%m-%d %H:%M:%S.%f')
-    except ValueError:
-        # If parsing fails, try without microseconds
-        departure_date_time_obj = datetime.strptime(departure_date_time, '%Y-%m-%d %H:%M:%S')
-
-    # Truncate microseconds
-    departure_date_time_obj = departure_date_time_obj.replace(microsecond=0)
-    departure_date_time_str = departure_date_time_obj.strftime('%Y-%m-%d %H:%M:%S')
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -239,7 +229,7 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             FROM Flight
             JOIN Airplane ON Flight.Airline_name = Airplane.Airline_name AND Flight.Plane_ID = Airplane.Plane_ID
             WHERE Flight.Airline_name = %s AND Flight.Flight_num = %s AND Flight.Departure_date_time = %s
-        """, (airline_name, flight_num, departure_date_time_str))
+        """, (airline_name, flight_num, departure_date_time))
         flight = cursor.fetchone()
         if not flight:
             error = 'Flight not found.'
@@ -274,20 +264,28 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             # Get current time for Purchase_date_time
             purchase_date_time = datetime.now()
 
+            # Use exact values from the flight for foreign key columns
+            fk_airline_name = flight['Airline_name']
+            fk_flight_num = flight['Flight_num']
+            fk_departure_date_time = flight['Departure_date_time']
+
             # Insert into Ticket table
             cursor.execute("""
                 INSERT INTO Ticket (Ticket_ID, traveler_Fname, traveler_Lname, traveler_DOB, Sold_Price, Card_type, Card_number, Name_on_card, Expiration_date,
                 Purchase_date_time, Flight_num, Airline_name, Departure_date_time, Customer_email)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (new_ticket_id, traveler_Fname, traveler_Lname, traveler_DOB, sold_price, card_type, card_number, name_on_card, expiration_date,
-                  purchase_date_time, flight_num, airline_name, departure_date_time_str, email))
+            """, (
+                new_ticket_id, traveler_Fname, traveler_Lname, traveler_DOB, sold_price, card_type, card_number,
+                name_on_card, expiration_date, purchase_date_time, fk_flight_num, fk_airline_name,
+                fk_departure_date_time, email
+            ))
 
             # Update Seats_booked in Flight table
             cursor.execute("""
                 UPDATE Flight
                 SET Seats_booked = Seats_booked + 1
                 WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
-            """, (airline_name, flight_num, departure_date_time_str))
+            """, (fk_airline_name, fk_flight_num, fk_departure_date_time))
 
             conn.commit()
 
