@@ -208,57 +208,35 @@ def purchase_ticket(airline_name, flight_num):
 
     email = session['username']
 
-    if request.method == 'POST':
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Fetch flight details
+        cursor.execute("""
+            SELECT * FROM Flight
+            WHERE Airline_name = %s AND Flight_num = %s
+        """, (airline_name, flight_num))
+        flight = cursor.fetchone()
+        if not flight:
+            error = 'Flight not found'
+            return render_template('error.html', error=error)
 
-        try:
-            # Record the current date and time as the purchase date and time
-            purchase_date_time = datetime.now()
+        # Handle POST request for purchasing the ticket
+        if request.method == 'POST':
+            # Implement ticket purchasing logic here
+            # ...
 
-            # Insert the new ticket into the Ticket table
-            # If Ticket_ID is auto-incremented, you don't need to provide it
-            cursor.execute("""
-                INSERT INTO Ticket (Flight_num, Airline_name, Customer_email, Purchase_date_time)
-                VALUES (%s, %s, %s, %s)
-            """, (flight_num, airline_name, email, purchase_date_time))
-
-            # Commit the transaction
-            conn.commit()
-
+            # After successful purchase
             message = 'Ticket purchased successfully.'
             return render_template('success.html', message=message)
-        except mysql.connector.Error as err:
-            # Handle MySQL errors
-            conn.rollback()
-            error = f'MySQL error during ticket purchase: {err}'
-            return render_template('error.html', error=error)
-        except Exception as e:
-            # Handle other exceptions
-            conn.rollback()
-            error = f'An unexpected error occurred during ticket purchase: {e}'
-            return render_template('error.html', error=error)
-        finally:
-            cursor.close()
-            conn.close()
-    else:
-        # Handle GET request: display flight details and purchase form
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
-            cursor.execute("""
-                SELECT * FROM Flight
-                WHERE Airline_name = %s AND Flight_num = %s
-            """, (airline_name, flight_num))
-            flight = cursor.fetchone()
-            if not flight:
-                error = 'Flight not found'
-                return render_template('error.html', error=error)
-        finally:
-            cursor.close()
-            conn.close()
+    except Exception as e:
+        error = f'An error occurred: {str(e)}'
+        return render_template('error.html', error=error)
+    finally:
+        cursor.close()
+        conn.close()
 
-        return render_template('purchase_ticket.html', flight=flight)
+    return render_template('purchase_ticket.html', flight=flight)
 
 
 @app.route('/track_spending')
