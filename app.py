@@ -214,6 +214,34 @@ def purchase_ticket(flight_id):
             conn.close()
         return render_template('purchase_ticket.html', flight=flight)
 
+@app.route('/track_spending', methods=['GET', 'POST'])
+def track_spending():
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+    
+    email = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Implement logic to calculate spending
+        # Example: Calculate total spending in the past year
+        query = """
+            SELECT SUM(Price) AS total_spent
+            FROM Ticket
+            JOIN Flight ON Ticket.Flight_num = Flight.Flight_num
+            WHERE Ticket.Customer_email = %s AND
+                  Purchase_date_time >= DATE_SUB(NOW(), INTERVAL 1 YEAR)
+        """
+        cursor.execute(query, (email,))
+        result = cursor.fetchone()
+        total_spent = result['total_spent'] if result['total_spent'] else 0
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return render_template('track_spending.html', total_spent=total_spent)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
