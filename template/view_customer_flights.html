@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Flights Taken by {{ customer_email }}</h2>
+
+<table border="1">
+    <tr>
+        <th>Flight Number</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Departure Time</th>
+        <th>Arrival Time</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Departure_airport }}</td>
+        <td>{{ flight.Arrival_airport }}</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td>{{ flight.Arrival_date_time }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<a href="{{ url_for('view_frequent_customers') }}">Back to Frequent Customers</a>
+{% endblock %}
