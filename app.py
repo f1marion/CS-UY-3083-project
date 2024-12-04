@@ -273,15 +273,12 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
     if 'username' not in session or session['user_type'] != 'customer':
         return redirect(url_for('login'))
 
-    email = session['username']
-
-    # Decode the URL-encoded departure_date_time
-    departure_date_time = unquote_plus(departure_date_time)
-
+    customer_email = session['username']
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
     try:
-        # Fetch flight details along with the number of seats
+        # Fetch flight details
         cursor.execute("""
             SELECT Flight.*, Airplane.Num_seats
             FROM Flight
@@ -289,76 +286,54 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             WHERE Flight.Airline_name = %s AND Flight.Flight_num = %s AND Flight.Departure_date_time = %s
         """, (airline_name, flight_num, departure_date_time))
         flight = cursor.fetchone()
+
         if not flight:
-            error = 'Flight not found.'
+            error = "Flight not found."
             return render_template('error.html', error=error)
 
-        # Check seat availability
-        num_seats = flight['Num_seats']
-        seats_booked = flight['Seats_booked'] or 0
-        if seats_booked >= num_seats:
-            error = 'No seats available on this flight.'
+        # Check if there are available seats
+        if flight['Seats_booked'] >= flight['Num_seats']:
+            error = "No available seats on this flight."
             return render_template('error.html', error=error)
 
-        # Handle POST request for purchasing the ticket
-        if request.method == 'POST':
-            # Collect form data
-            traveler_Fname = request.form['traveler_Fname']
-            traveler_Lname = request.form['traveler_Lname']
-            traveler_DOB = request.form['traveler_DOB']
-            card_type = request.form['card_type']
-            card_number = request.form['card_number']
-            name_on_card = request.form['name_on_card']
-            expiration_date = request.form['expiration_date']
+        # Generate a unique Ticket ID
+        import uuid
+        ticket_id = str(uuid.uuid4())
 
-            # Generate a new Ticket_ID
-            cursor.execute("SELECT MAX(Ticket_ID) AS max_id FROM Ticket")
-            result = cursor.fetchone()
-            new_ticket_id = (result['max_id'] or 0) + 1
+        # Calculate sold price (could include logic for price adjustments)
+        sold_price = flight['Base_price']
 
-            # Get Sold_Price from the flight's Base_price
-            sold_price = flight['Base_price']
+        # Start a transaction
+        conn.start_transaction()
 
-            # Get current time for Purchase_date_time
-            purchase_date_time = datetime.now()
+        # Insert ticket
+        cursor.execute("""
+            INSERT INTO Ticket (Ticket_ID, Airline_name, Flight_num, Departure_date_time, Customer_email, Purchase_date_time, Sold_price)
+            VALUES (%s, %s, %s, %s, %s, NOW(), %s)
+        """, (ticket_id, airline_name, flight_num, departure_date_time, customer_email, sold_price))
 
-            # Use exact values from the flight for foreign key columns
-            fk_airline_name = flight['Airline_name']
-            fk_flight_num = flight['Flight_num']
-            fk_departure_date_time = flight['Departure_date_time']
+        # Update Seats_booked in Flight
+        cursor.execute("""
+            UPDATE Flight
+            SET Seats_booked = Seats_booked + 1
+            WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
+        """, (airline_name, flight_num, departure_date_time))
 
-            # Insert into Ticket table
-            cursor.execute("""
-                INSERT INTO Ticket (Ticket_ID, traveler_Fname, traveler_Lname, traveler_DOB, Sold_Price, Card_type, Card_number, Name_on_card, Expiration_date,
-                Purchase_date_time, Flight_num, Airline_name, Departure_date_time, Customer_email)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                new_ticket_id, traveler_Fname, traveler_Lname, traveler_DOB, sold_price, card_type, card_number,
-                name_on_card, expiration_date, purchase_date_time, fk_flight_num, fk_airline_name,
-                fk_departure_date_time, email
-            ))
+        # Commit the transaction
+        conn.commit()
 
-            # Update Seats_booked in Flight table
-            cursor.execute("""
-                UPDATE Flight
-                SET Seats_booked = Seats_booked + 1
-                WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
-            """, (fk_airline_name, fk_flight_num, fk_departure_date_time))
+        message = "Ticket purchased successfully."
+        return render_template('success.html', message=message)
 
-            conn.commit()
-
-            # After successful purchase
-            message = 'Ticket purchased successfully.'
-            return render_template('success.html', message=message)
     except Exception as e:
         conn.rollback()
-        error = f'An error occurred: {str(e)}'
+        app.logger.error(f"Error purchasing ticket: {e}")
+        error = "An error occurred while purchasing the ticket. Please try again."
         return render_template('error.html', error=error)
     finally:
         cursor.close()
         conn.close()
 
-    return render_template('purchase_ticket.html', flight=flight)
 
 
 
