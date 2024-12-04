@@ -12,9 +12,112 @@ from urllib.parse import unquote_plus
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')  # Ensure you have an 'index.html' template
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    error = None
+    flights = []
+    return_flights = []
+    flights_status = []
+
+    if request.method == 'POST':
+        # Check which form was submitted
+        if 'search_flights' in request.form:
+            # Flight search form submitted
+            source = request.form.get('source')
+            destination = request.form.get('destination')
+            departure_date = request.form.get('departure_date')
+            return_date = request.form.get('return_date')
+            trip_type = request.form.get('trip_type')  # 'one-way' or 'round-trip'
+
+            # Build the query for departure flights
+            query = """
+                SELECT Flight.*, A1.City AS Departure_city, A2.City AS Arrival_city
+                FROM Flight
+                JOIN Airport AS A1 ON Flight.Departure_airport = A1.Code
+                JOIN Airport AS A2 ON Flight.Arrival_airport = A2.Code
+                WHERE Flight.Departure_date_time >= NOW()
+            """
+            params = []
+
+            # Filter by source city or airport
+            if source:
+                query += " AND (A1.City = %s OR A1.Name = %s OR A1.Code = %s)"
+                params.extend([source, source, source])
+
+            # Filter by destination city or airport
+            if destination:
+                query += " AND (A2.City = %s OR A2.Name = %s OR A2.Code = %s)"
+                params.extend([destination, destination, destination])
+
+            # Filter by departure date
+            if departure_date:
+                query += " AND DATE(Flight.Departure_date_time) = %s"
+                params.append(departure_date)
+
+            # Execute query for departure flights
+            cursor.execute(query, params)
+            flights = cursor.fetchall()
+
+            # For round-trip, search for return flights
+            if trip_type == 'round-trip' and return_date:
+                return_query = """
+                    SELECT Flight.*, A1.City AS Departure_city, A2.City AS Arrival_city
+                    FROM Flight
+                    JOIN Airport AS A1 ON Flight.Departure_airport = A1.Code
+                    JOIN Airport AS A2 ON Flight.Arrival_airport = A2.Code
+                    WHERE Flight.Departure_date_time >= NOW()
+                """
+                return_params = []
+
+                # Swap source and destination for return flight
+                if destination:
+                    return_query += " AND (A1.City = %s OR A1.Name = %s OR A1.Code = %s)"
+                    return_params.extend([destination, destination, destination])
+
+                if source:
+                    return_query += " AND (A2.City = %s OR A2.Name = %s OR A2.Code = %s)"
+                    return_params.extend([source, source, source])
+
+                if return_date:
+                    return_query += " AND DATE(Flight.Departure_date_time) = %s"
+                    return_params.append(return_date)
+
+                # Execute query for return flights
+                cursor.execute(return_query, return_params)
+                return_flights = cursor.fetchall()
+
+        elif 'check_status' in request.form:
+            # Flight status form submitted
+            airline_name = request.form.get('airline_name')
+            flight_num = request.form.get('flight_num')
+            date = request.form.get('date')
+
+            if not airline_name or not flight_num:
+                error = "Please provide both airline name and flight number."
+            else:
+                status_query = """
+                    SELECT Flight.*
+                    FROM Flight
+                    WHERE Flight.Airline_name = %s AND Flight.Flight_num = %s
+                """
+                status_params = [airline_name, flight_num]
+
+                if date:
+                    status_query += " AND (DATE(Flight.Departure_date_time) = %s OR DATE(Flight.Arrival_date_time) = %s)"
+                    status_params.extend([date, date])
+
+                cursor.execute(status_query, status_params)
+                flights_status = cursor.fetchall()
+        else:
+            error = "Invalid form submission."
+
+    cursor.close()
+    conn.close()
+    return render_template('index.html', flights=flights, return_flights=return_flights,
+                           flights_status=flights_status, error=error)
+
 
 @app.template_filter('url_encode')
 def url_encode(s):
