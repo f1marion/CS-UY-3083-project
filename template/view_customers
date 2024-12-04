@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Customers on Flight {{ flight_num }}</h2>
+
+<table border="1">
+    <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+    </tr>
+    {% for customer in customers %}
+    <tr>
+        <td>{{ customer.Fname }}</td>
+        <td>{{ customer.Lname }}</td>
+        <td>{{ customer.Email }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<a href="{{ url_for('staff_home') }}">Back to Flights</a>
+{% endblock %}
