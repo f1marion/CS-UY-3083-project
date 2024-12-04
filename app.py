@@ -105,5 +105,105 @@ def search_flights():
     return render_template('search_flights.html')
 
 
+# app.py (continued)
+
+@app.route('/flight_status', methods=['GET', 'POST'])
+def flight_status():
+    if request.method == 'POST':
+        airline_name = request.form['airline_name']
+        flight_num = request.form['flight_num']
+        date = request.form['date']
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            query = """
+                SELECT Status FROM Flight
+                WHERE Airline_name = %s AND Flight_num = %s AND DATE(Departure_date_time) = %s
+            """
+            cursor.execute(query, (airline_name, flight_num, date))
+            status = cursor.fetchone()
+        finally:
+            cursor.close()
+            conn.close()
+        return render_template('flight_status_result.html', status=status)
+    return render_template('flight_status.html')
+
+# app.py (continued)
+
+@app.route('/customer_home')
+def customer_home():
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+    return render_template('customer_home.html')
+
+
+# app.py (continued)
+
+@app.route('/my_flights')
+def my_flights():
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+    email = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+            SELECT Flight.*, Ticket.Ticket_ID FROM Flight
+            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num
+            WHERE Ticket.Customer_email = %s AND Flight.Departure_date_time >= NOW()
+        """
+        cursor.execute(query, (email,))
+        flights = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+    return render_template('my_flights.html', flights=flights)
+
+
+# app.py (continued)
+
+@app.route('/purchase_ticket/<flight_id>', methods=['GET', 'POST'])
+def purchase_ticket(flight_id):
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+    email = session['username']
+    if request.method == 'POST':
+        traveler_fname = request.form['traveler_fname']
+        traveler_lname = request.form['traveler_lname']
+        traveler_dob = request.form['traveler_dob']
+        # Payment details can be collected here
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            # Generate new Ticket_ID
+            cursor.execute("SELECT MAX(Ticket_ID) FROM Ticket")
+            max_id = cursor.fetchone()[0] or 0
+            new_ticket_id = max_id + 1
+            # Insert into Ticket table
+            cursor.execute("""
+                INSERT INTO Ticket (Ticket_ID, traveler_Fname, traveler_Lname, traveler_DOB, Flight_num, Airline_name, Customer_email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (new_ticket_id, traveler_fname, traveler_lname, traveler_dob, flight_id, 'Airline_Name', email))  # Replace 'Airline_Name' appropriately
+            conn.commit()
+        except Exception as e:
+            error = str(e)
+            return render_template('purchase_ticket.html', error=error)
+        finally:
+            cursor.close()
+            conn.close()
+        return redirect(url_for('my_flights'))
+    else:
+        # Display flight details
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM Flight WHERE Flight_num = %s", (flight_id,))
+            flight = cursor.fetchone()
+        finally:
+            cursor.close()
+            conn.close()
+        return render_template('purchase_ticket.html', flight=flight)
+
+
 
 
