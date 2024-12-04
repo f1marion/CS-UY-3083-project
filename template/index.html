@@ -1,13 +1,10 @@
 <!-- templates/index.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Welcome to Air Ticket Reservation System</title>
-</head>
-<body>
-    <h1>Welcome to Air Ticket Reservation System</h1>
-    <p><a href="{{ url_for('login') }}">Login</a> | <a href="{{ url_for('register_customer') }}">Register as Customer</a> | <a href="{{ url_for('register_staff') }}">Register as Staff</a></p>
-</body>
-</html>
-
+{% extends "base.html" %}
+{% block content %}
+<h2>Welcome to the Air Ticket Reservation System</h2>
+<p>Please <a href="{{ url_for('login') }}">Login</a> or Register:</p>
+<ul>
+    <li><a href="{{ url_for('register_customer') }}">Register as Customer</a></li>
+    <li><a href="{{ url_for('register_staff') }}">Register as Airline Staff</a></li>
+</ul>
+{% endblock %}
