@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from db_connection import get_db_connection
 from datetime import datetime
 import bcrypt
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote, unquote_plus
 from markupsafe import Markup
 
  
@@ -203,10 +203,6 @@ def my_flights():
 
 # app.py (continued)
 
-# Custom Jinja filter
-@app.template_filter('url_encode')
-def url_encode(s):
-    return quote(str(s))
 
 @app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
 def purchase_ticket(airline_name, flight_num, departure_date_time):
@@ -215,9 +211,8 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
 
     email = session['username']
 
-    # Decode and parse the departure_date_time
-    departure_date_time = unquote(departure_date_time)
-    departure_date_time = datetime.strptime(departure_date_time, '%Y-%m-%d %H:%M:%S')
+    # Decode the URL-encoded departure_date_time
+    departure_date_time = unquote_plus(departure_date_time)
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -292,6 +287,7 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
         conn.close()
 
     return render_template('purchase_ticket.html', flight=flight)
+
 
 
 
