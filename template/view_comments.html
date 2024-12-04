@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Comments for Flight {{ flight_num }}</h2>
+
+<table border="1">
+    <tr>
+        <th>Customer Name</th>
+        <th>Rating</th>
+        <th>Comment</th>
+    </tr>
+    {% for review in reviews %}
+    <tr>
+        <td>{{ review.Fname }} {{ review.Lname }}</td>
+        <td>{{ review.Ratings }}</td>
+        <td>{{ review.Comments }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<a href="{{ url_for('view_ratings') }}">Back to Ratings</a>
+{% endblock %}
