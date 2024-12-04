@@ -266,40 +266,28 @@ def track_spending():
 
     return render_template('track_spending.html', total_spent=total_spent)
 
-@app.route('/cancel_ticket/<int:ticket_id>', methods=['GET', 'POST'])
-def cancel_trip(ticket_id):
+@app.route('/cancel_trip')
+def cancel_trip():
     if 'username' not in session or session['user_type'] != 'customer':
         return redirect(url_for('login'))
-
     email = session['username']
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
-        # Verify that the ticket belongs to the user
-        cursor.execute("""
-            SELECT * FROM Ticket
-            WHERE Ticket_ID = %s AND Customer_email = %s
-        """, (ticket_id, email))
-        ticket = cursor.fetchone()
-        if not ticket:
-            error = 'Ticket not found or does not belong to you.'
-            return render_template('error.html', error=error)
-
-        # Delete the ticket
-        cursor.execute("""
-            DELETE FROM Ticket WHERE Ticket_ID = %s
-        """, (ticket_id,))
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        error = f'An error occurred: {str(e)}'
-        return render_template('error.html', error=error)
+        # Fetch upcoming flights that can be canceled
+        query = """
+            SELECT Flight.*, Ticket.Ticket_ID
+            FROM Flight
+            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num AND Flight.Airline_name = Ticket.Airline_name
+            WHERE Ticket.Customer_email = %s AND Flight.Departure_date_time > NOW()
+        """
+        cursor.execute(query, (email,))
+        flights = cursor.fetchall()
     finally:
         cursor.close()
         conn.close()
+    return render_template('cancel_trip.html', flights=flights)
 
-    message = 'Your trip has been successfully cancelled.'
-    return render_template('success.html', message=message)
 
 @app.route('/rate_flights', methods=['GET', 'POST'])
 def rate_flights():
