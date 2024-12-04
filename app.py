@@ -721,25 +721,27 @@ def add_airport():
         city = request.form['city']
         country = request.form['country']
         airport_type = request.form['airport_type']
+        num_terminals = request.form['num_terminals']
 
         conn = get_db_connection()
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                INSERT INTO Airport (Code, Name, City, Country, Type)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (code, name, city, country, airport_type))
+                INSERT INTO Airport (Code, Name, City, Country, Type, Num_terminals)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (code, name, city, country, airport_type, num_terminals))
             conn.commit()
             message = "Airport added successfully."
             return render_template('success.html', message=message)
         except Exception as e:
             conn.rollback()
             error = f"An error occurred: {str(e)}"
-            return render_template('error.html', error=error)
+            return render_template('add_airport.html', error=error)
         finally:
             cursor.close()
             conn.close()
     return render_template('add_airport.html')
+
 
 
 @app.route('/view_ratings', methods=['GET', 'POST'])
