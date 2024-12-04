@@ -1,19 +1,18 @@
 <!-- templates/login.html -->
 {% extends "base.html" %}
+
 {% block content %}
 <h2>Login</h2>
-<form method="post">
-    User Type:
-    <select name="user_type">
-        <option value="customer">Customer</option>
-        <option value="staff">Airline Staff</option>
-    </select><br>
-    Username: <input type="text" name="username" required><br>
-    Password: <input type="password" name="password" required><br>
-    <input type="submit" value="Login">
-</form>
-{% if error %}
-<p style="color:red;">{{ error }}</p>
-{% endif %}
-{% endblock %}
 
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      <p style="color:green;">{{ message }}</p>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="post">
+    <!-- Login form fields -->
+</form>
+{% endblock %}
