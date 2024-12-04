@@ -6,9 +6,13 @@ import bcrypt
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+#@app.route('/')
+#def index():
+#    return render_template('index.html')  # Ensure you have an 'index.html' template
+
 @app.route('/')
 def index():
-    return render_template('index.html')  # Ensure you have an 'index.html' template
+    return 'Welcome to the Air Ticket Reservation System!'
 
 @app.route('/test')
 def test():
