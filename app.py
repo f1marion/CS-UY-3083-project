@@ -203,6 +203,9 @@ def my_flights():
 
 # app.py (continued)
 
+@app.template_filter('url_encode')
+def url_encode(s):
+    return quote_plus(str(s))
 
 @app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
 def purchase_ticket(airline_name, flight_num, departure_date_time):
