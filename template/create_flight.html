@@ -3,19 +3,53 @@
 {% block content %}
 <h2>Create New Flight</h2>
 
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
 <form method="post">
-    Flight Number: <input type="text" name="flight_num" required><br>
-    Departure Airport Code: <input type="text" name="departure_airport" required><br>
-    Arrival Airport Code: <input type="text" name="arrival_airport" required><br>
-    Departure DateTime: <input type="datetime-local" name="departure_date_time" required><br>
-    Arrival DateTime: <input type="datetime-local" name="arrival_date_time" required><br>
-    Base Price: <input type="number" name="base_price" step="0.01" required><br>
-    Plane ID: <input type="text" name="plane_id" required><br>
-    Status:
-    <select name="status">
+    <label for="flight_num">Flight Number:</label>
+    <input type="text" name="flight_num" id="flight_num" required><br>
+    
+    <label for="departure_date_time">Departure Date and Time:</label>
+    <input type="datetime-local" name="departure_date_time" id="departure_date_time" required><br>
+    
+    <label for="arrival_date_time">Arrival Date and Time:</label>
+    <input type="datetime-local" name="arrival_date_time" id="arrival_date_time" required><br>
+    
+    <label for="departure_airport">Departure Airport:</label>
+    <select name="departure_airport" id="departure_airport" required>
+        {% for airport in airports %}
+        <option value="{{ airport.Code }}">{{ airport.Code }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label for="arrival_airport">Arrival Airport:</label>
+    <select name="arrival_airport" id="arrival_airport" required>
+        {% for airport in airports %}
+        <option value="{{ airport.Code }}">{{ airport.Code }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label for="base_price">Base Price:</label>
+    <input type="number" name="base_price" id="base_price" step="0.01" required><br>
+    
+    <label for="status">Status:</label>
+    <select name="status" id="status" required>
         <option value="On-Time">On-Time</option>
         <option value="Delayed">Delayed</option>
     </select><br>
+    
+    <label for="plane_id">Airplane:</label>
+    <select name="plane_id" id="plane_id" required>
+        {% for plane in airplanes %}
+        <option value="{{ plane.Plane_ID }}">{{ plane.Plane_ID }} (Capacity: {{ plane.Num_seats }})</option>
+        {% endfor %}
+    </select><br>
+    
+    <label for="seats_booked">Seats Booked:</label>
+    <input type="number" name="seats_booked" id="seats_booked" min="0" required><br>
+    
     <input type="submit" value="Create Flight">
 </form>
 {% endblock %}
