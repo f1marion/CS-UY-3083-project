@@ -1,10 +1,146 @@
-<!-- templates/index.html -->
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Welcome to the Air Ticket Reservation System</h2>
-<p>Please <a href="{{ url_for('login') }}">Login</a> or Register:</p>
-<ul>
-    <li><a href="{{ url_for('register_customer') }}">Register as Customer</a></li>
-    <li><a href="{{ url_for('register_staff') }}">Register as Airline Staff</a></li>
-</ul>
+<h2>Welcome to the Airline System</h2>
+
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
+<h3>Search for Flights</h3>
+<form method="post">
+    <input type="hidden" name="search_flights" value="1">
+    <label for="trip_type">Trip Type:</label>
+    <select name="trip_type" id="trip_type" required onchange="toggleReturnDate()">
+        <option value="one-way">One-way</option>
+        <option value="round-trip">Round-trip</option>
+    </select><br><br>
+
+    <label for="source">Source City/Airport:</label>
+    <input type="text" name="source" id="source" required placeholder="City or Airport Name or Code"><br><br>
+
+    <label for="destination">Destination City/Airport:</label>
+    <input type="text" name="destination" id="destination" required placeholder="City or Airport Name or Code"><br><br>
+
+    <label for="departure_date">Departure Date:</label>
+    <input type="date" name="departure_date" id="departure_date" required><br><br>
+
+    <label for="return_date">Return Date:</label>
+    <input type="date" name="return_date" id="return_date" disabled><br><br>
+
+    <input type="submit" value="Search Flights">
+</form>
+
+<script>
+function toggleReturnDate() {
+    var tripType = document.getElementById('trip_type').value;
+    var returnDate = document.getElementById('return_date');
+    if (tripType === 'round-trip') {
+        returnDate.disabled = false;
+        returnDate.required = true;
+    } else {
+        returnDate.disabled = true;
+        returnDate.required = false;
+        returnDate.value = '';
+    }
+}
+</script>
+
+{% if flights %}
+<h3>Available Flights</h3>
+<table border="1">
+    <tr>
+        <th>Flight Number</th>
+        <th>Airline</th>
+        <th>Departure Airport (City)</th>
+        <th>Arrival Airport (City)</th>
+        <th>Departure Time</th>
+        <th>Arrival Time</th>
+        <th>Price</th>
+        <th>Status</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Airline_name }}</td>
+        <td>{{ flight.Departure_airport }} ({{ flight.Departure_city }})</td>
+        <td>{{ flight.Arrival_airport }} ({{ flight.Arrival_city }})</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td>{{ flight.Arrival_date_time }}</td>
+        <td>${{ "{:.2f}".format(flight.Base_price) }}</td>
+        <td>{{ flight.Status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% if return_flights %}
+<h3>Return Flights</h3>
+<table border="1">
+    <tr>
+        <th>Flight Number</th>
+        <th>Airline</th>
+        <th>Departure Airport (City)</th>
+        <th>Arrival Airport (City)</th>
+        <th>Departure Time</th>
+        <th>Arrival Time</th>
+        <th>Price</th>
+        <th>Status</th>
+    </tr>
+    {% for flight in return_flights %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Airline_name }}</td>
+        <td>{{ flight.Departure_airport }} ({{ flight.Departure_city }})</td>
+        <td>{{ flight.Arrival_airport }} ({{ flight.Arrival_city }})</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td>{{ flight.Arrival_date_time }}</td>
+        <td>${{ "{:.2f}".format(flight.Base_price) }}</td>
+        <td>{{ flight.Status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+<h3>Check Flight Status</h3>
+<form method="post">
+    <input type="hidden" name="check_status" value="1">
+    <label for="airline_name">Airline Name:</label>
+    <input type="text" name="airline_name" id="airline_name" required><br><br>
+
+    <label for="flight_num">Flight Number:</label>
+    <input type="text" name="flight_num" id="flight_num" required><br><br>
+
+    <label for="date">Date (Optional):</label>
+    <input type="date" name="date" id="date"><br><br>
+
+    <input type="submit" value="Check Status">
+</form>
+
+{% if flights_status %}
+<h3>Flight Status</h3>
+<table border="1">
+    <tr>
+        <th>Flight Number</th>
+        <th>Airline</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Departure Time</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+    </tr>
+    {% for flight in flights_status %}
+    <tr>
+        <td>{{ flight.Flight_num }}</td>
+        <td>{{ flight.Airline_name }}</td>
+        <td>{{ flight.Departure_airport }}</td>
+        <td>{{ flight.Arrival_airport }}</td>
+        <td>{{ flight.Departure_date_time }}</td>
+        <td>{{ flight.Arrival_date_time }}</td>
+        <td>{{ flight.Status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
 {% endblock %}
