@@ -234,7 +234,7 @@ def purchase_ticket(flight_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         try:
-            cursor.execute("SELECT * FROM Flight WHERE Airline_name = %s AND Flight_num = %s", (airline_name, flight_num))
+            cursor.execute("SELECT * FROM Flight WHERE Flight_num = %s", (flight_id,))
             flight = cursor.fetchone()
         finally:
             cursor.close()
@@ -279,7 +279,6 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
 
 
 
