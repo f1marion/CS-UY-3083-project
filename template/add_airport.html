@@ -3,16 +3,32 @@
 {% block content %}
 <h2>Add New Airport</h2>
 
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
 <form method="post">
-    Airport Code: <input type="text" name="code" maxlength="3" required><br>
-    Name: <input type="text" name="name" required><br>
-    City: <input type="text" name="city" required><br>
-    Country: <input type="text" name="country" required><br>
-    Type:
-    <select name="airport_type">
+    <label for="code">Airport Code (3 letters):</label>
+    <input type="text" name="code" id="code" maxlength="3" required><br>
+
+    <label for="name">Name:</label>
+    <input type="text" name="name" id="name" required><br>
+
+    <label for="city">City:</label>
+    <input type="text" name="city" id="city" required><br>
+
+    <label for="country">Country:</label>
+    <input type="text" name="country" id="country" required><br>
+
+    <label for="airport_type">Type:</label>
+    <select name="airport_type" id="airport_type" required>
         <option value="Domestic">Domestic</option>
         <option value="International">International</option>
     </select><br>
+
+    <label for="num_terminals">Number of Terminals:</label>
+    <input type="number" name="num_terminals" id="num_terminals" min="1" required><br>
+
     <input type="submit" value="Add Airport">
 </form>
 {% endblock %}
