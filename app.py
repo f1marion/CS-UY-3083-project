@@ -267,7 +267,7 @@ def track_spending():
     return render_template('track_spending.html', total_spent=total_spent)
 
 @app.route('/cancel_ticket/<int:ticket_id>', methods=['GET', 'POST'])
-def cancel_ticket(ticket_id):
+def cancel_trip(ticket_id):
     if 'username' not in session or session['user_type'] != 'customer':
         return redirect(url_for('login'))
 
