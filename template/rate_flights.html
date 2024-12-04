@@ -1,0 +1,31 @@
+<!-- templates/rate_flights.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Rate and Comment on Past Flights</h2>
+{% if flights %}
+    <table>
+        <tr>
+            <th>Flight Number</th>
+            <th>Airline</th>
+            <th>Departure</th>
+            <th>Arrival</th>
+            <th>Date & Time</th>
+            <th>Action</th>
+        </tr>
+        {% for flight in flights %}
+        <tr>
+            <td>{{ flight.Flight_num }}</td>
+            <td>{{ flight.Airline_name }}</td>
+            <td>{{ flight.Departure_airport }}</td>
+            <td>{{ flight.Arrival_airport }}</td>
+            <td>{{ flight.Arrival_date_time }}</td>
+            <td>
+                <a href="{{ url_for('rate_flight', ticket_id=flight.Ticket_ID) }}">Rate Flight</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>You have no past flights to rate.</p>
+{% endif %}
+{% endblock %}
