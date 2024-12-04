@@ -10,6 +10,10 @@ app.secret_key = 'your_secret_key'
 def index():
     return render_template('index.html')  # Ensure you have an 'index.html' template
 
+@app.route('/test')
+def test():
+    return 'Test page is working!'
+
 
 @app.route('/register_customer', methods=['GET', 'POST'])
 def register_customer():
