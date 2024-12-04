@@ -1,7 +1,21 @@
 <!-- templates/success.html -->
 {% extends "base.html" %}
+
 {% block content %}
 <h2>Success</h2>
+
+{% if message %}
 <p>{{ message }}</p>
-<a href="{{ url_for('customer_home') }}">Return to Home</a>
+{% endif %}
+
+<!-- Determine the home URL based on user type -->
+{% if session['user_type'] == 'customer' %}
+    {% set home_url = url_for('customer_home') %}
+{% elif session['user_type'] == 'staff' %}
+    {% set home_url = url_for('staff_home') %}
+{% else %}
+    {% set home_url = url_for('index') %}
+{% endif %}
+
+<a href="{{ home_url }}">Return to Home</a>
 {% endblock %}
