@@ -90,6 +90,38 @@ def login():
             return render_template('login.html', error=error)
     return render_template('login.html')
 
+@app.route('/')
+def home():
+    if 'username' in session:
+        if session['user_type'] == 'customer':
+            return redirect(url_for('customer_home'))
+        elif session['user_type'] == 'staff':
+            return redirect(url_for('staff_home'))
+    return render_template('index.html')
+
+
+@app.route('/customer_home')
+def customer_home():
+    if 'username' not in session or session['user_type'] != 'customer':
+        return redirect(url_for('login'))
+    email = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+            SELECT Flight.*
+            FROM Flight
+            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num
+            WHERE Ticket.Customer_email = %s AND Flight.Departure_date_time >= NOW()
+        """
+        cursor.execute(query, (email,))
+        flights = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+    return render_template('customer_home.html', flights=flights)
+
+
 
 # app.py (continued)
 
@@ -140,11 +172,6 @@ def flight_status():
 
 # app.py (continued)
 
-@app.route('/customer_home')
-def customer_home():
-    if 'username' not in session or session['user_type'] != 'customer':
-        return redirect(url_for('login'))
-    return render_template('customer_home.html')
 
 
 # app.py (continued)
