@@ -4,7 +4,9 @@
 <h2>Welcome, {{ session['username'] }}</h2>
 <ul>
     <li><a href="{{ url_for('my_flights') }}">View My Flights</a></li>
-    <li><a href="{{ url_for('search_flights') }}">Search for Flights</a></li>
+    <li><a href="{{ url_for('search_flights') }}">Search and Purchase Flights</a></li>
+    <li><a href="{{ url_for('cancel_trip') }}">Cancel a Trip</a></li>
+    <li><a href="{{ url_for('rate_flights') }}">Rate and Comment on Flights</a></li>
     <li><a href="{{ url_for('track_spending') }}">Track My Spending</a></li>
     <li><a href="{{ url_for('logout') }}">Logout</a></li>
 </ul>
@@ -14,16 +16,23 @@
     <table>
         <tr>
             <th>Flight Number</th>
+            <th>Airline</th>
             <th>Departure</th>
             <th>Arrival</th>
             <th>Date & Time</th>
+            <th>Actions</th>
         </tr>
         {% for flight in flights %}
         <tr>
             <td>{{ flight.Flight_num }}</td>
+            <td>{{ flight.Airline_name }}</td>
             <td>{{ flight.Departure_airport }}</td>
             <td>{{ flight.Arrival_airport }}</td>
             <td>{{ flight.Departure_date_time }}</td>
+            <td>
+                <!-- Action links -->
+                <a href="{{ url_for('cancel_ticket', ticket_id=flight.Ticket_ID) }}">Cancel Trip</a>
+            </td>
         </tr>
         {% endfor %}
     </table>
@@ -31,3 +40,4 @@
     <p>You have no upcoming flights.</p>
 {% endif %}
 {% endblock %}
+
