@@ -586,43 +586,84 @@ def view_customers(flight_num, departure_date_time):
 def create_flight():
     if 'username' not in session or session['user_type'] != 'staff':
         return redirect(url_for('login'))
-
+    
     username = session['username']
     conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Get airline name
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get airline name associated with the staff member
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
-    airline = cursor.fetchone()[0]
-
+    airline = cursor.fetchone()['Airline_name']
+    
+    # Get list of airplanes for the airline
+    cursor.execute("SELECT Plane_ID, Num_seats FROM Airplane WHERE Airline_name = %s", (airline,))
+    airplanes = cursor.fetchall()
+    
+    # Get list of airports
+    cursor.execute("SELECT Code FROM Airport")
+    airports = cursor.fetchall()
+    
     if request.method == 'POST':
-        # Collect flight data from the form
         flight_num = request.form['flight_num']
-        departure_airport = request.form['departure_airport']
-        arrival_airport = request.form['arrival_airport']
         departure_date_time = request.form['departure_date_time']
         arrival_date_time = request.form['arrival_date_time']
+        departure_airport = request.form['departure_airport']
+        arrival_airport = request.form['arrival_airport']
         base_price = request.form['base_price']
-        plane_id = request.form['plane_id']
         status = request.form['status']
-
-        # Insert into Flight table
+        plane_id = request.form['plane_id']
+        seats_booked = request.form['seats_booked']
+        
+        # Data validation
+        # Ensure seats_booked is a non-negative integer
+        if not seats_booked.isdigit() or int(seats_booked) < 0:
+            error = "Seats booked must be a non-negative integer."
+            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+        seats_booked = int(seats_booked)
+        
+        # Get the capacity of the selected airplane
+        plane_capacity = None
+        for plane in airplanes:
+            if plane['Plane_ID'] == plane_id:
+                plane_capacity = plane['Num_seats']
+                break
+        if plane_capacity is None:
+            error = "Invalid airplane selected."
+            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+        
+        # Check that seats_booked does not exceed capacity
+        if seats_booked > plane_capacity:
+            error = f"Seats booked ({seats_booked}) cannot exceed the airplane's capacity ({plane_capacity})."
+            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+        
+        # Ensure departure and arrival airports are different
+        if departure_airport == arrival_airport:
+            error = "Departure and arrival airports cannot be the same."
+            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+        
+        # Insert flight into database
         try:
             cursor.execute("""
-                INSERT INTO Flight (Airline_name, Flight_num, Departure_date_time, Arrival_date_time,
-                                    Base_price, Plane_ID, Status, Departure_airport, Arrival_airport)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (airline, flight_num, departure_date_time, arrival_date_time, base_price, plane_id, status, departure_airport, arrival_airport))
+                INSERT INTO Flight (Airline_name, Flight_num, Departure_date_time, Arrival_date_time, Departure_airport,
+                Arrival_airport, Base_price, Status, Plane_ID, Seats_booked)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (airline, flight_num, departure_date_time, arrival_date_time, departure_airport,
+                  arrival_airport, base_price, status, plane_id, seats_booked))
             conn.commit()
             message = "Flight created successfully."
             return render_template('success.html', message=message)
         except Exception as e:
             conn.rollback()
             error = f"An error occurred: {str(e)}"
-            return render_template('error.html', error=error)
-    cursor.close()
-    conn.close()
-    return render_template('create_flight.html')
+            return render_template('add_flight.html', airplanes=airplanes, airports=airports, error=error)
+        finally:
+            cursor.close()
+            conn.close()
+    else:
+        cursor.close()
+        conn.close()
+        return render_template('add_flight.html', airplanes=airplanes, airports=airports)
+
 
 
 @app.route('/change_status', methods=['GET', 'POST'])
