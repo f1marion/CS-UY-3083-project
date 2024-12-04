@@ -116,29 +116,41 @@ def register_staff():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        user_type = request.form['user_type']  # 'customer' or 'staff'
-        username = request.form['username']
-        password = request.form['password'].encode('utf-8')
+        # Determine user type
+        user_type = request.form['user_type']
+        username_or_email = request.form['username_or_email']
+        password = request.form['password']
+
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+
         if user_type == 'customer':
-            cursor.execute("SELECT * FROM Customer WHERE Email = %s", (username,))
-        else:
-            cursor.execute("SELECT * FROM Airline_Staff WHERE Username = %s", (username,))
-        user = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if user and bcrypt.checkpw(password, user['Password'].encode('utf-8')):
-            session['username'] = username
-            session['user_type'] = user_type
-            if user_type == 'customer':
+            # Login for customer
+            cursor.execute("SELECT * FROM Customer WHERE Email = %s", (username_or_email,))
+            user = cursor.fetchone()
+            if user and bcrypt.checkpw(password.encode('utf-8'), user['Password'].encode('utf-8')):
+                session['username'] = user['Email']
+                session['user_type'] = 'customer'
                 return redirect(url_for('customer_home'))
             else:
+                error = 'Invalid email or password.'
+                return render_template('login.html', error=error)
+        elif user_type == 'staff':
+            # Login for staff
+            cursor.execute("SELECT * FROM Airline_Staff WHERE Username = %s", (username_or_email,))
+            user = cursor.fetchone()
+            if user and bcrypt.checkpw(password.encode('utf-8'), user['Password'].encode('utf-8')):
+                session['username'] = user['Username']
+                session['user_type'] = 'staff'
                 return redirect(url_for('staff_home'))
+            else:
+                error = 'Invalid username or password.'
+                return render_template('login.html', error=error)
         else:
-            error = 'Invalid username or password'
+            error = 'Invalid user type.'
             return render_template('login.html', error=error)
     return render_template('login.html')
+
 
 @app.route('/')
 def home():
