@@ -201,47 +201,42 @@ def my_flights():
 # app.py (continued)
 
 
-@app.route('/purchase_ticket/<flight_id>', methods=['GET', 'POST'])
-def purchase_ticket(flight_id):
+@app.route('/purchase_ticket/<airline_name>/<flight_num>', methods=['GET', 'POST'])
+def purchase_ticket(airline_name, flight_num):
     if 'username' not in session or session['user_type'] != 'customer':
         return redirect(url_for('login'))
+
     email = session['username']
-    if request.method == 'POST':
-        traveler_fname = request.form['traveler_fname']
-        traveler_lname = request.form['traveler_lname']
-        traveler_dob = request.form['traveler_dob']
-        # Payment details can be collected here
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
-            # Generate new Ticket_ID
-            cursor.execute("SELECT MAX(Ticket_ID) FROM Ticket")
-            max_id = cursor.fetchone()[0] or 0
-            new_ticket_id = max_id + 1
-            # Insert into Ticket table
-            cursor.execute("""
-                INSERT INTO Ticket (Ticket_ID, traveler_Fname, traveler_Lname, traveler_DOB, Flight_num, Airline_name, Customer_email)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (new_ticket_id, traveler_fname, traveler_lname, traveler_dob, flight_id, 'Airline_Name', email))  # Replace 'Airline_Name' appropriately
-            conn.commit()
-        except Exception as e:
-            error = str(e)
-            return render_template('purchase_ticket.html', error=error)
-        finally:
-            cursor.close()
-            conn.close()
-        return redirect(url_for('my_flights'))
-    else:
-        # Display flight details
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT * FROM Flight WHERE Flight_num = %s", (flight_id,))
-            flight = cursor.fetchone()
-        finally:
-            cursor.close()
-            conn.close()
-        return render_template('purchase_ticket.html', flight=flight)
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Fetch flight details
+        cursor.execute("""
+            SELECT * FROM Flight
+            WHERE Airline_name = %s AND Flight_num = %s
+        """, (airline_name, flight_num))
+        flight = cursor.fetchone()
+        if not flight:
+            error = 'Flight not found'
+            return render_template('error.html', error=error)
+
+        # Handle POST request for purchasing the ticket
+        if request.method == 'POST':
+            # Implement ticket purchasing logic here
+            # ...
+
+            # After successful purchase
+            message = 'Ticket purchased successfully.'
+            return render_template('success.html', message=message)
+    except Exception as e:
+        error = f'An error occurred: {str(e)}'
+        return render_template('error.html', error=error)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('purchase_ticket.html', flight=flight)
 
 
 @app.route('/track_spending')
