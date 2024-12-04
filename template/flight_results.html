@@ -18,8 +18,9 @@
         <td>{{ flight.Departure_airport }}</td>
         <td>{{ flight.Arrival_airport }}</td>
         <td>{{ flight.Departure_date_time }}</td>
-        <!-- Use the exact string from the database -->
-        {% set encoded_departure_time = flight.Departure_date_time | url_encode %}
+        <!-- Encode departure_date_time -->
+        {% set departure_time_str = flight.Departure_date_time.strftime('%Y-%m-%d %H:%M:%S') %}
+        {% set encoded_departure_time = departure_time_str | url_encode %}
         <td><a href="{{ url_for('purchase_ticket', airline_name=flight.Airline_name, flight_num=flight.Flight_num, departure_date_time=encoded_departure_time) }}">Purchase Ticket</a></td>
     </tr>
     {% endfor %}
