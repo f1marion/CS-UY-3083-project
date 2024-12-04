@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Airplanes Owned by {{ session['username'] }}</h2>
+{% if message %}
+<p>{{ message }}</p>
+{% endif %}
+<table border="1">
+    <tr>
+        <th>Plane ID</th>
+        <th>Number of Seats</th>
+        <th>Manufacturer</th>
+        <th>Age</th>
+    </tr>
+    {% for plane in airplanes %}
+    <tr>
+        <td>{{ plane.Plane_ID }}</td>
+        <td>{{ plane.Num_seats }}</td>
+        <td>{{ plane.Manufacturer }}</td>
+        <td>{{ plane.Age }}</td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="{{ url_for('staff_home') }}">Back to Home</a>
+{% endblock %}
