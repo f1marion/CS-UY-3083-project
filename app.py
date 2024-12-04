@@ -268,6 +268,15 @@ def track_spending():
     
     return render_template('track_spending.html', total_spent=total_spent)
 
+@app.route('/logout')
+def logout():
+    # Remove user data from the session
+    session.pop('username', None)
+    session.pop('user_type', None)
+    # Redirect the user to the login page or home page
+    return redirect(url_for('login'))
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
