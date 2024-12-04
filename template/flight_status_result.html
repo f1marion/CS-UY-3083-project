@@ -1,0 +1,10 @@
+<!-- templates/flight_status_result.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Flight Status</h2>
+{% if status %}
+<p>The flight status is: {{ status.Status }}</p>
+{% else %}
+<p>Flight not found.</p>
+{% endif %}
+{% endblock %}
