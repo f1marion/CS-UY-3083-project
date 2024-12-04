@@ -1,0 +1,7 @@
+<!-- templates/track_spending.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Track My Spending</h2>
+<p>Total spent in the past year: ${{ total_spent }}</p>
+<a href="{{ url_for('customer_home') }}">Back to Home</a>
+{% endblock %}
