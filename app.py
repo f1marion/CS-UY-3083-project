@@ -332,22 +332,6 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             # Ensure Departure_date_time is in the correct format
             if isinstance(fk_departure_date_time, datetime):
                 fk_departure_date_time = fk_departure_date_time.strftime('%Y-%m-%d %H:%M:%S')
-
-     print(f"Ticket_ID: {new_ticket_id}")
-print(f"Traveler Fname: {traveler_Fname}")
-print(f"Traveler Lname: {traveler_Lname}")
-print(f"Traveler DOB: {traveler_DOB}")
-print(f"Sold Price: {sold_price}")
-print(f"Card Type: {card_type}")
-print(f"Card Number: {card_number}")
-print(f"Name on Card: {name_on_card}")
-print(f"Expiration Date: {expiration_date}")
-print(f"Purchase Date Time: {purchase_date_time}")
-print(f"Flight Num: {fk_flight_num}")
-print(f"Airline Name: {fk_airline_name}")
-print(f"Departure Date Time: {fk_departure_date_time}")
-print(f"Customer Email: {email}")
-
      
             # Insert into Ticket table
             cursor.execute("""
