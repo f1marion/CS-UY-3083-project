@@ -4,6 +4,10 @@
 {% block content %}
 <h2>Login</h2>
 
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     {% for message in messages %}
@@ -13,6 +17,18 @@
 {% endwith %}
 
 <form method="post">
-    <!-- Login form fields -->
+    <label for="user_type">User Type:</label>
+    <select name="user_type" id="user_type" required>
+        <option value="customer">Customer</option>
+        <option value="staff">Staff</option>
+    </select><br>
+
+    <label for="username_or_email">Email/Username:</label>
+    <input type="text" name="username_or_email" id="username_or_email" required><br>
+
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password" required><br>
+
+    <input type="submit" value="Login">
 </form>
 {% endblock %}
