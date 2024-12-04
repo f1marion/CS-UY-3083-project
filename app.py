@@ -34,20 +34,45 @@ def register_customer():
         password = request.form['password']
         fname = request.form['fname']
         lname = request.form['lname']
+        building_number = request.form['building_number']
+        street_name = request.form['street_name']
+        apartment_number = request.form.get('apartment_number')  # Optional
+        city = request.form['city']
+        state = request.form['state']
+        zip_code = request.form['zip_code']
+        passport_number = request.form['passport_number']
+        passport_expiration = request.form['passport_expiration']
+        passport_country = request.form['passport_country']
+        dob = request.form['dob']
+
         # Hash password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
         # Store in database
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO Customer (Email, Password, Fname, Lname)
-            VALUES (%s, %s, %s, %s)
-        """, (email, hashed_password.decode('utf-8'), fname, lname))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return redirect(url_for('login'))
+        try:
+            cursor.execute("""
+                INSERT INTO Customer (Email, Password, Fname, Lname, Building_number, Street_name,
+                Apartment_number, City, State, Zip_code, Passport_number, Passport_expiration, Passport_country, DOB)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                email, hashed_password.decode('utf-8'), fname, lname, building_number, street_name,
+                apartment_number, city, state, zip_code, passport_number, passport_expiration,
+                passport_country, dob
+            ))
+            conn.commit()
+            message = "Registration successful. Please log in."
+            return render_template('login.html', message=message)
+        except Exception as e:
+            conn.rollback()
+            error = f"An error occurred: {str(e)}"
+            return render_template('register_customer.html', error=error)
+        finally:
+            cursor.close()
+            conn.close()
     return render_template('register_customer.html')
+
 
 @app.route('/register_staff', methods=['GET', 'POST'])
 def register_staff():
@@ -57,21 +82,32 @@ def register_staff():
         password = request.form['password']
         fname = request.form['fname']
         lname = request.form['lname']
+        dob = request.form['dob']
         airline_name = request.form['airline_name']
+
         # Hash password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
         # Store in database
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO Airline_Staff (Username, Password, Fname, Lname, Airline_name)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (username, hashed_password.decode('utf-8'), fname, lname, airline_name))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return redirect(url_for('login'))
+        try:
+            cursor.execute("""
+                INSERT INTO Airline_Staff (Username, Password, Fname, Lname, DOB, Airline_name)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (username, hashed_password.decode('utf-8'), fname, lname, dob, airline_name))
+            conn.commit()
+            message = "Registration successful. Please log in."
+            return render_template('login.html', message=message)
+        except Exception as e:
+            conn.rollback()
+            error = f"An error occurred: {str(e)}"
+            return render_template('register_staff.html', error=error)
+        finally:
+            cursor.close()
+            conn.close()
     return render_template('register_staff.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
