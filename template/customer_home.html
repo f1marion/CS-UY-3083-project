@@ -1,1 +1,12 @@
+<!-- templates/customer_home.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Welcome, {{ session.username }}</h2>
+<ul>
+    <li><a href="{{ url_for('search_flights') }}">Search Flights</a></li>
+    <li><a href="{{ url_for('my_flights') }}">View My Flights</a></li>
+    <li><a href="{{ url_for('track_spending') }}">Track My Spending</a></li>
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+</ul>
+{% endblock %}
 
