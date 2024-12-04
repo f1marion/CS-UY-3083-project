@@ -1,23 +1,23 @@
 <!-- templates/purchase_ticket.html -->
 {% extends "base.html" %}
 {% block content %}
-<h2>Purchase Ticket</h2>
-{% if flight %}
-<p>Flight Number: {{ flight.Flight_num }}</p>
+<h2>Purchase Ticket for Flight {{ flight.Flight_num }}</h2>
 <p>Airline: {{ flight.Airline_name }}</p>
+<p>From: {{ flight.Departure_airport }}</p>
+<p>To: {{ flight.Arrival_airport }}</p>
 <p>Departure Time: {{ flight.Departure_date_time }}</p>
-<p>Arrival Time: {{ flight.Arrival_date_time }}</p>
+
 <form method="post">
-    Traveler First Name: <input type="text" name="traveler_fname" required><br>
-    Traveler Last Name: <input type="text" name="traveler_lname" required><br>
-    Traveler DOB: <input type="date" name="traveler_dob" required><br>
-    <!-- Payment details can be added here -->
-    <input type="submit" value="Purchase">
+    <label for="traveler_fname">First Name:</label>
+    <input type="text" name="traveler_fname" id="traveler_fname" required><br>
+    <label for="traveler_lname">Last Name:</label>
+    <input type="text" name="traveler_lname" id="traveler_lname" required><br>
+    <label for="traveler_dob">Date of Birth:</label>
+    <input type="date" name="traveler_dob" id="traveler_dob" required><br>
+    <!-- Include payment fields if necessary -->
+    <input type="submit" value="Purchase Ticket">
 </form>
 {% if error %}
 <p style="color:red;">{{ error }}</p>
-{% endif %}
-{% else %}
-<p>Flight not found.</p>
 {% endif %}
 {% endblock %}
