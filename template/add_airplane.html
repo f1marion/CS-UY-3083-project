@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add New Airplane</h2>
+
+<form method="post">
+    Plane ID: <input type="text" name="plane_id" required><br>
+    Number of Seats: <input type="number" name="num_seats" required><br>
+    Manufacturer: <input type="text" name="manufacturer"><br>
+    Age: <input type="number" name="age"><br>
+    <input type="submit" value="Add Airplane">
+</form>
+
+<h3>Your Airplanes</h3>
+<table border="1">
+    <tr>
+        <th>Plane ID</th>
+        <th>Number of Seats</th>
+        <th>Manufacturer</th>
+        <th>Age</th>
+    </tr>
+    {% for plane in airplanes %}
+    <tr>
+        <td>{{ plane.Plane_ID }}</td>
+        <td>{{ plane.Num_seats }}</td>
+        <td>{{ plane.Manufacturer }}</td>
+        <td>{{ plane.Age }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
