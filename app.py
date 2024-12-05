@@ -466,8 +466,7 @@ def rate_flights():
     return render_template('rate_flights.html', flights=flights)
 
 
-
-@app.route('/rate_flight/<int:ticket_id>', methods=['GET', 'POST'])
+@app.route('/rate_flight/<ticket_id>', methods=['GET', 'POST'])
 def rate_flight(ticket_id):
     if 'username' not in session or session['user_type'] != 'customer':
         return redirect(url_for('login'))
@@ -478,9 +477,11 @@ def rate_flight(ticket_id):
     try:
         # Verify that the ticket belongs to the user and get flight details
         cursor.execute("""
-            SELECT Flight.*, Ticket.Ticket_ID, Flight.Departure_date_time
+            SELECT Flight.*, Ticket.Ticket_ID, Flight.Departure_date_time, Flight.Arrival_date_time
             FROM Flight
-            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num AND Flight.Airline_name = Ticket.Airline_name
+            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num 
+                       AND Flight.Airline_name = Ticket.Airline_name 
+                       AND Flight.Departure_date_time = Ticket.Departure_date_time
             WHERE Ticket.Ticket_ID = %s AND Ticket.Customer_email = %s
         """, (ticket_id, email))
         flight = cursor.fetchone()
@@ -488,14 +489,24 @@ def rate_flight(ticket_id):
             error = 'Flight not found or does not belong to you.'
             return render_template('error.html', error=error)
 
+        # Check if the flight has already arrived
+        flight_arrival_time = flight.get('Arrival_date_time')
+        if flight_arrival_time and flight_arrival_time > datetime.now():
+            error = 'You can only rate flights that have already occurred.'
+            return render_template('error.html', error=error)
+
         if request.method == 'POST':
-            rating = int(request.form['rating'])
-            comment = request.form['comment']
+            rating = request.form.get('rating')
+            comment = request.form.get('comment')
 
             # Validate rating
-            if rating < 1 or rating > 5:
-                error = 'Rating must be between 1 and 5.'
-                return render_template('rate_flight.html', flight=flight, error=error)
+            try:
+                rating = int(rating)
+                if rating < 1 or rating > 5:
+                    raise ValueError
+            except (ValueError, TypeError):
+                error = 'Rating must be an integer between 1 and 5.'
+                return render_template('rate_flight.html', flight=flight, error=error, review=None)
 
             # Insert or update review in the 'reviews' table
             cursor.execute("""
@@ -511,6 +522,8 @@ def rate_flight(ticket_id):
             return render_template('success.html', message=message)
     except Exception as e:
         conn.rollback()
+        # Log the error for debugging
+        app.logger.error(f'Error in rate_flight: {e}')
         error = f'An error occurred: {str(e)}'
         return render_template('error.html', error=error)
     finally:
@@ -520,15 +533,18 @@ def rate_flight(ticket_id):
     # Fetch existing review if any
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT Ratings, Comments FROM reviews
-        WHERE Email = %s AND Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
-    """, (email, flight['Airline_name'], flight['Flight_num'], flight['Departure_date_time']))
-    review = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            SELECT Ratings, Comments FROM reviews
+            WHERE Email = %s AND Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
+        """, (email, flight['Airline_name'], flight['Flight_num'], flight['Departure_date_time']))
+        review = cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
 
     return render_template('rate_flight.html', flight=flight, review=review)
+
 
 
 @app.route('/staff_home', methods=['GET', 'POST'])
