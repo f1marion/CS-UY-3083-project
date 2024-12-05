@@ -67,7 +67,7 @@ def register_customer():
             return redirect(url_for('login'))
         except Exception as e:
             conn.rollback()
-            error = f"An error occurred: {str(e)}"
+            error = escape(f"An error occurred: {str(e)}")
             return render_template('register_customer.html', error=error)
         finally:
             cursor.close()
@@ -107,7 +107,7 @@ def register_staff():
             return redirect(url_for('login'))
         except Exception as e:
             conn.rollback()
-            error = f"An error occurred: {str(e)}"
+            error = escape(f"An error occurred: {str(e)}")
             return render_template('register_staff.html', error=error)
         finally:
             cursor.close()
@@ -488,7 +488,7 @@ def rate_flight(ticket_id):
             return render_template('success.html', message=message)
     except Exception as e:
         conn.rollback()
-        error = f'An error occurred: {str(e)}'
+        error = escape(f'An error occurred: {str(e)}')
         return render_template('error.html', error=error)
     finally:
         cursor.close()
