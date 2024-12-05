@@ -20,7 +20,7 @@
         <td>{{ flight.Arrival_date_time }}</td>
         <td>{{ flight.Status }}</td>
         <td>
-            <form action="{{ url_for('cancel_ticket', ticket_id=flight.Ticket_ID) }}" method="post" style="display:inline;">
+            <form action="{{ url_for('cancel_trip', ticket_id=flight.Ticket_ID) }}" method="post" style="display:inline;">
                 <input type="submit" value="Cancel">
             </form>
             <a href="{{ url_for('rate_flight', flight_id=flight.Flight_num) }}">Rate Flight</a>
