@@ -347,11 +347,11 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             ))
 
             # Update Seats_booked in Flight table
-            #cursor.execute("""
-               # UPDATE Flight
-                #SET Seats_booked = Seats_booked + 1
-                #WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
-          #  """, (fk_airline_name, fk_flight_num, fk_departure_date_time))
+            cursor.execute("""
+                UPDATE Flight
+                SET Seats_booked = Seats_booked + 1
+                WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
+            """, (fk_airline_name, fk_flight_num, fk_departure_date_time))
 
             conn.commit()
 
