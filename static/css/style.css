@@ -2,6 +2,7 @@
 body {
     background-color: #add8e6; /* Light blue background */
     font-family: Arial, sans-serif; /* Set a clean, readable font */
+    font-size: 0.9rem; /* Decrease base font size */
     margin: 0;
     padding: 0;
     display: flex;
@@ -16,9 +17,9 @@ body {
     background-color: #ffffff; /* White background for content boxes */
     border: 2px solid #00008b; /* Blue border */
     border-radius: 8px; /* Rounded corners */
-    padding: 20px;
+    padding: 15px; /* Reduce padding */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for a subtle 3D effect */
-    max-width: 500px;
+    max-width: 480px; /* Slightly reduce max width */
     width: 100%;
     text-align: center; /* Center text inside */
 }
@@ -27,23 +28,28 @@ body {
 form input[type="text"],
 form input[type="email"],
 form input[type="password"],
-form input[type="submit"],
+form input[type="date"],
+form input[type="datetime-local"],
+form input[type="number"],
 form select {
     width: 90%; /* Make inputs take up most of the width */
-    padding: 10px;
-    margin: 10px 0;
+    padding: 8px; /* Reduce padding */
+    margin: 8px 0; /* Reduce margin */
     border: 1px solid #00008b; /* Blue border */
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: 0.9rem; /* Decrease font size */
     box-sizing: border-box;
 }
 
 /* Submit button styling */
 form input[type="submit"] {
+    width: 90%; /* Ensure submit button matches other inputs */
+    padding: 10px;
     background-color: #00008b; /* Navy blue background */
     color: white;
     cursor: pointer;
     border: none;
+    font-size: 0.95rem; /* Slightly larger font for submit button */
     transition: background-color 0.3s ease;
 }
 
@@ -55,6 +61,7 @@ form input[type="submit"]:hover {
 p.error {
     color: red; /* Highlight errors in red */
     font-weight: bold;
+    font-size: 0.9rem; /* Decrease font size */
 }
 
 /* Links */
@@ -62,8 +69,10 @@ a {
     color: #00008b; /* Navy blue links */
     text-decoration: none;
     font-weight: bold;
+    font-size: 0.9rem; /* Decrease font size */
 }
 
 a:hover {
     text-decoration: underline; /* Underline links on hover */
 }
+
