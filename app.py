@@ -266,11 +266,9 @@ def my_flights():
 
 # app.py (continued)
 
-
-
 from datetime import datetime
-import uuid
 from urllib.parse import unquote_plus
+from dateutil import parser
 
 @app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
 def purchase_ticket(airline_name, flight_num, departure_date_time):
@@ -279,8 +277,10 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
 
     email = session['username']
 
-    # Decode the URL-encoded departure_date_time
+    # Decode and parse the departure_date_time
     departure_date_time = unquote_plus(departure_date_time)
+    departure_date_time_parsed = parser.parse(departure_date_time)
+    departure_date_time_formatted = departure_date_time_parsed.strftime('%Y-%m-%d %H:%M:%S')
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -291,7 +291,7 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             FROM Flight
             JOIN Airplane ON Flight.Airline_name = Airplane.Airline_name AND Flight.Plane_ID = Airplane.Plane_ID
             WHERE Flight.Airline_name = %s AND Flight.Flight_num = %s AND Flight.Departure_date_time = %s
-        """, (airline_name, flight_num, departure_date_time))
+        """, (airline_name, flight_num, departure_date_time_formatted))
         flight = cursor.fetchone()
         if not flight:
             error = 'Flight not found.'
@@ -315,8 +315,11 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             name_on_card = request.form['name_on_card']
             expiration_date = request.form['expiration_date']
 
-            # Generate a new Ticket_ID using UUID
-            new_ticket_id = str(uuid.uuid4())
+            # Generate a new Ticket_ID (ensure it's an integer)
+            cursor.execute("SELECT MAX(Ticket_ID) AS max_id FROM Ticket")
+            result = cursor.fetchone()
+            max_ticket_id = result['max_id'] or 0
+            new_ticket_id = max_ticket_id + 1
 
             # Get Sold_Price from the flight's Base_price
             sold_price = flight['Base_price']
@@ -333,26 +336,28 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             traveler_DOB_formatted = datetime.strptime(traveler_DOB, '%Y-%m-%d').strftime('%Y-%m-%d')
             expiration_date_formatted = datetime.strptime(expiration_date, '%Y-%m-%d').strftime('%Y-%m-%d')
 
+            # Start a transaction
+            conn.autocommit = False
+
             # Insert into Ticket table
             cursor.execute("""
-                INSERT INTO Ticket (
-                    Ticket_ID, traveler_Fname, traveler_Lname, traveler_DOB, Sold_Price, Card_type,
-                    Card_number, Name_on_card, Expiration_date, Purchase_date_time, Flight_num,
-                    Airline_name, Departure_date_time, Customer_email
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO Ticket (Ticket_ID, traveler_Fname, traveler_Lname, traveler_DOB, Sold_Price, Card_type, Card_number, Name_on_card, Expiration_date,
+                Purchase_date_time, Flight_num, Airline_name, Departure_date_time, Customer_email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                new_ticket_id, traveler_Fname, traveler_Lname, traveler_DOB_formatted, sold_price, card_type,
-                card_number, name_on_card, expiration_date_formatted, purchase_date_time, fk_flight_num,
-                fk_airline_name, fk_departure_date_time, email
+                new_ticket_id, traveler_Fname, traveler_Lname, traveler_DOB_formatted, sold_price, card_type, card_number,
+                name_on_card, expiration_date_formatted, purchase_date_time, fk_flight_num, fk_airline_name,
+                fk_departure_date_time, email
             ))
 
             # Update Seats_booked in Flight table
-            #cursor.execute("""
-                #UPDATE Flight
-                #SET Seats_booked = Seats_booked + 1
-                #WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
-            #""", (fk_airline_name, fk_flight_num, fk_departure_date_time))
+            cursor.execute("""
+                UPDATE Flight
+                SET Seats_booked = Seats_booked + 1
+                WHERE Airline_name = %s AND Flight_num = %s AND Departure_date_time = %s
+            """, (fk_airline_name, fk_flight_num, fk_departure_date_time))
 
+            # Commit the transaction
             conn.commit()
 
             # After successful purchase
@@ -360,7 +365,6 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             return render_template('success.html', message=message)
     except Exception as e:
         conn.rollback()
-        # Log the error for debugging
         app.logger.error(f'Error purchasing ticket: {e}')
         error = f'An error occurred: {str(e)}'
         return render_template('error.html', error=error)
@@ -369,6 +373,7 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
         conn.close()
 
     return render_template('purchase_ticket.html', flight=flight)
+
 
 
 
