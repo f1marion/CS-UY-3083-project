@@ -20,7 +20,7 @@
             <td>{{ flight.Arrival_airport }}</td>
             <td>{{ flight.Departure_date_time }}</td>
             <td>
-                <a href="{{ url_for('cancel_ticket', ticket_id=flight.Ticket_ID) }}">Cancel Trip</a>
+                <a href="{{ url_for('cancel_trip', ticket_id=flight.Ticket_ID) }}">Cancel Trip</a>
             </td>
         </tr>
         {% endfor %}
