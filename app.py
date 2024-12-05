@@ -252,10 +252,15 @@ def my_flights():
     cursor = conn.cursor(dictionary=True)
     try:
         query = """
-            SELECT Flight.*, Ticket.Ticket_ID FROM Flight
-            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num
-            WHERE Ticket.Customer_email = %s AND Flight.Departure_date_time >= NOW()
-        """
+    SELECT Flight.*, Ticket.Ticket_ID
+    FROM Flight
+    JOIN Ticket ON Flight.Airline_name = Ticket.Airline_name
+               AND Flight.Flight_num = Ticket.Flight_num
+               AND Flight.Departure_date_time = Ticket.Departure_date_time
+    WHERE Ticket.Customer_email = %s
+      AND Flight.Departure_date_time >= NOW()
+"""
+
         cursor.execute(query, (email,))
         flights = cursor.fetchall()
     finally:
