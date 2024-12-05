@@ -67,7 +67,7 @@ def register_customer():
             return redirect(url_for('login'))
         except Exception as e:
             conn.rollback()
-            error = escape(f"An error occurred: {}")
+            error = f"An error occurred: {}"
             return render_template('register_customer.html', error=error)
         finally:
             cursor.close()
