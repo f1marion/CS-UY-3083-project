@@ -1,1 +1,69 @@
+/* Global styles */
+body {
+    background-color: #add8e6; /* Light blue background */
+    font-family: Arial, sans-serif; /* Set a clean, readable font */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center all content horizontally */
+    justify-content: center; /* Center all content vertically */
+    min-height: 100vh;
+}
 
+/* General container styling */
+.container {
+    background-color: #ffffff; /* White background for content boxes */
+    border: 2px solid #00008b; /* Blue border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for a subtle 3D effect */
+    max-width: 500px;
+    width: 100%;
+    text-align: center; /* Center text inside */
+}
+
+/* Form input styles */
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form input[type="submit"],
+form select {
+    width: 90%; /* Make inputs take up most of the width */
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #00008b; /* Blue border */
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+/* Submit button styling */
+form input[type="submit"] {
+    background-color: #00008b; /* Navy blue background */
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+form input[type="submit"]:hover {
+    background-color: #4169e1; /* Lighter blue on hover */
+}
+
+/* Error messages */
+p.error {
+    color: red; /* Highlight errors in red */
+    font-weight: bold;
+}
+
+/* Links */
+a {
+    color: #00008b; /* Navy blue links */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline; /* Underline links on hover */
+}
