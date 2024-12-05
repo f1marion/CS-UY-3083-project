@@ -67,7 +67,7 @@ def register_customer():
             return redirect(url_for('login'))
         except Exception as e:
             conn.rollback()
-            error = escape(f"An error occurred: {str(e)}")
+            error = escape(f"An error occurred: {}")
             return render_template('register_customer.html', error=error)
         finally:
             cursor.close()
@@ -107,7 +107,7 @@ def register_staff():
             return redirect(url_for('login'))
         except Exception as e:
             conn.rollback()
-            error = escape(f"An error occurred: {str(e)}")
+            error = escape(f"An error occurred: {}")
             return render_template('register_staff.html', error=error)
         finally:
             cursor.close()
@@ -488,7 +488,7 @@ def rate_flight(ticket_id):
             return render_template('success.html', message=message)
     except Exception as e:
         conn.rollback()
-        error = escape(f'An error occurred: {str(e)}')
+        error = escape(f'An error occurred: {}')
         return render_template('error.html', error=error)
     finally:
         cursor.close()
@@ -661,7 +661,7 @@ def create_flight():
             return render_template('success.html', message=message)
         except Exception as e:
             conn.rollback()
-            error = f"An error occurred: {str(e)}"
+            error = escape(f"An error occurred: {str(e)}")
             return render_template('create_flight.html', airplanes=airplanes, airports=airports, error=error)
         finally:
             cursor.close()
@@ -702,7 +702,7 @@ def change_status():
             return render_template('success.html', message=message)
         except Exception as e:
             conn.rollback()
-            error = f"An error occurred: {str(e)}"
+            error = escape(f"An error occurred: {str(e)}")
             return render_template('error.html', error=error)
     cursor.close()
     conn.close()
@@ -744,7 +744,7 @@ def add_airplane():
             return render_template('view_airplanes.html', airplanes=airplanes, message=message)
         except Exception as e:
             conn.rollback()
-            error = f"An error occurred: {str(e)}"
+            error = escape(f"An error occurred: {str(e)}")
             return render_template('add_airplane.html', error=error)
         finally:
             cursor.close()
@@ -783,7 +783,7 @@ def add_airport():
             return render_template('success.html', message=message)
         except Exception as e:
             conn.rollback()
-            error = f"An error occurred: {str(e)}"
+            error = escape(f"An error occurred: {str(e)}")
             return render_template('add_airport.html', error=error)
         finally:
             cursor.close()
@@ -913,7 +913,7 @@ def schedule_maintenance():
             return render_template('success.html', message=message)
         except Exception as e:
             conn.rollback()
-            error = f"An error occurred: {str(e)}"
+            error = escape(f"An error occurred: {str(e)}")
             return render_template('error.html', error=error)
     cursor.close()
     conn.close()
