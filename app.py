@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from db_connection import get_db_connection
 from datetime import datetime, timedelta
 import bcrypt
@@ -25,8 +25,6 @@ def url_encode(s):
 @app.template_filter('url_encode')
 def url_encode(s):
     return quote(str(s))
-
-from flask import flash  # Import flash for messaging
 
 @app.route('/register_customer', methods=['GET', 'POST'])
 def register_customer():
