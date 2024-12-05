@@ -1,34 +1,36 @@
-<!-- templates/my_flights.html -->
 {% extends "base.html" %}
 {% block content %}
-<h2>My Upcoming Flights</h2>
+<h2>My Flights</h2>
 {% if flights %}
 <table border="1">
     <tr>
-        <th>Flight Number</th>
+        <th>Flight Num</th>
         <th>Airline</th>
+        <th>Departure</th>
+        <th>Arrival</th>
         <th>Departure Time</th>
         <th>Arrival Time</th>
-        <th>Status</th>
-        <th>Action</th>
+        <th>Rate Flight</th>
     </tr>
     {% for flight in flights %}
     <tr>
         <td>{{ flight.Flight_num }}</td>
         <td>{{ flight.Airline_name }}</td>
+        <td>{{ flight.Departure_airport }}</td>
+        <td>{{ flight.Arrival_airport }}</td>
         <td>{{ flight.Departure_date_time }}</td>
         <td>{{ flight.Arrival_date_time }}</td>
-        <td>{{ flight.Status }}</td>
         <td>
-            <form action="{{ url_for('cancel_trip', ticket_id=flight.Ticket_ID) }}" method="post" style="display:inline;">
-                <input type="submit" value="Cancel">
-            </form>
-            <a href="{{ url_for('rate_flight', ticket_id=flight.ticket_id) }}">Rate Flight</a>
+          {% if flight.Ticket_ID %}
+          <a href="{{ url_for('rate_flight', ticket_id=flight.Ticket_ID) }}">Rate Flight</a>
+          {% else %}
+          No ticket_id available
+          {% endif %}
         </td>
     </tr>
     {% endfor %}
 </table>
 {% else %}
-<p>You have no upcoming flights.</p>
+<p>No flights found.</p>
 {% endif %}
 {% endblock %}
