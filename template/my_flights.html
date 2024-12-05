@@ -4,6 +4,7 @@
 {% if flights %}
 <table border="1">
     <tr>
+        <th>Ticket ID</th>
         <th>Flight Num</th>
         <th>Airline</th>
         <th>Departure</th>
@@ -13,6 +14,7 @@
     </tr>
     {% for flight in flights %}
     <tr>
+        <td>{{ Ticket.Ticket_ID }}</td>
         <td>{{ flight.Flight_num }}</td>
         <td>{{ flight.Airline_name }}</td>
         <td>{{ flight.Departure_airport }}</td>
