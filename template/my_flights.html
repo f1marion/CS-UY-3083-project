@@ -20,13 +20,6 @@
         <td>{{ flight.Arrival_airport }}</td>
         <td>{{ flight.Departure_date_time }}</td>
         <td>{{ flight.Arrival_date_time }}</td>
-        <td>
-          {% if flight.Ticket_ID %}
-          <a href="{{ url_for('rate_flight', ticket_id=flight.Ticket_ID) }}">Rate Flight</a>
-          {% else %}
-          No ticket_id available
-          {% endif %}
-        </td>
     </tr>
     {% endfor %}
 </table>
