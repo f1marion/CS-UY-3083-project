@@ -405,40 +405,89 @@ def track_spending():
 
 @app.route('/cancel_trip', methods=['GET', 'POST'])
 def cancel_trip():
-    if 'username' not in session or session['user_type'] != 'customer':
+    if 'username' not in session or session.get('user_type') != 'customer':
         return redirect(url_for('login'))
+    
     email = session['username']
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-
+    
     try:
         # Handle POST request (cancel the trip)
         if request.method == 'POST':
             ticket_id = request.form.get('ticket_id')
             if ticket_id:
-                # Delete the ticket from the database
                 try:
-                    cursor.execute("DELETE FROM Ticket WHERE Ticket_ID = %s", (ticket_id,))
-                    conn.commit()
-                    flash("Ticket canceled successfully.")
+                    # Start a transaction
+                    conn.start_transaction()
+                    
+                    # Step 1: Retrieve flight details associated with the ticket
+                    select_query = """
+                        SELECT Airline_name, Flight_num, Departure_date_time
+                        FROM Ticket
+                        WHERE Ticket_ID = %s AND Customer_email = %s
+                        FOR UPDATE
+                    """
+                    cursor.execute(select_query, (ticket_id, email))
+                    flight = cursor.fetchone()
+                    
+                    if flight:
+                        airline_name = flight['Airline_name']
+                        flight_num = flight['Flight_num']
+                        departure_date_time = flight['Departure_date_time']
+                        
+                        # Step 2: Delete the ticket
+                        delete_query = "DELETE FROM Ticket WHERE Ticket_ID = %s"
+                        cursor.execute(delete_query, (ticket_id,))
+                        
+                        # Step 3: Decrement Seats_booked in Flight
+                        update_query = """
+                            UPDATE Flight
+                            SET Seats_booked = Seats_booked - 1
+                            WHERE Airline_name = %s 
+                              AND Flight_num = %s 
+                              AND Departure_date_time = %s
+                              AND Seats_booked > 0
+                        """
+                        cursor.execute(update_query, (airline_name, flight_num, departure_date_time))
+                        
+                        if cursor.rowcount == 0:
+                            # If no rows were updated, rollback and notify
+                            conn.rollback()
+                            flash("Failed to update seats booked. Please contact support.", "danger")
+                        else:
+                            # Commit the transaction
+                            conn.commit()
+                            flash("Ticket canceled successfully.", "success")
+                    else:
+                        conn.rollback()
+                        flash("Ticket not found or unauthorized action.", "danger")
+                
+                except mysql.connector.Error as err:
+                    conn.rollback()
+                    flash(f"Database error: {err}", "danger")
                 except Exception as e:
                     conn.rollback()
-                    flash(f"An error occurred while canceling the ticket: {str(e)}")
-
+                    flash(f"An unexpected error occurred: {str(e)}", "danger")
+        
         # Fetch upcoming flights that can be canceled
         query = """
             SELECT Flight.*, Ticket.Ticket_ID
             FROM Flight
-            JOIN Ticket ON Flight.Flight_num = Ticket.Flight_num AND Flight.Airline_name = Ticket.Airline_name AND Flight.Departure_date_time = Ticket.Departure_date_time
-            WHERE Ticket.Customer_email = %s AND Flight.Departure_date_time > NOW()
+            JOIN Ticket 
+              ON Flight.Flight_num = Ticket.Flight_num 
+             AND Flight.Airline_name = Ticket.Airline_name 
+             AND Flight.Departure_date_time = Ticket.Departure_date_time
+            WHERE Ticket.Customer_email = %s 
+              AND Flight.Departure_date_time > NOW()
         """
         cursor.execute(query, (email,))
         flights = cursor.fetchall()
-
+    
     finally:
         cursor.close()
         conn.close()
-
+    
     return render_template('cancel_trip.html', flights=flights)
 
 
