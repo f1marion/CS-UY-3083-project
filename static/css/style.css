@@ -2,7 +2,6 @@
 body {
     background-color: #add8e6; /* Light blue background */
     font-family: Arial, sans-serif; /* Set a clean, readable font */
-    font-size: 0.9rem; /* Decrease base font size */
     margin: 0;
     padding: 0;
     display: flex;
@@ -10,6 +9,7 @@ body {
     align-items: center; /* Center all content horizontally */
     justify-content: center; /* Center all content vertically */
     min-height: 100vh;
+    font-size: 0.8rem; /* Smaller global font size */
 }
 
 /* General container styling */
@@ -17,11 +17,17 @@ body {
     background-color: #ffffff; /* White background for content boxes */
     border: 2px solid #00008b; /* Blue border */
     border-radius: 8px; /* Rounded corners */
-    padding: 15px; /* Reduce padding */
+    padding: 16px; /* Reduced padding */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for a subtle 3D effect */
-    max-width: 480px; /* Slightly reduce max width */
-    width: 100%;
+    max-width: 400px; /* Reduce max width */
+    width: 90%; /* Use most of the screen width */
     text-align: center; /* Center text inside */
+}
+
+/* Section titles */
+h2 {
+    font-size: 1rem; /* Smaller font size for titles */
+    margin: 10px 0; /* Reduce spacing */
 }
 
 /* Form input styles */
@@ -29,28 +35,26 @@ form input[type="text"],
 form input[type="email"],
 form input[type="password"],
 form input[type="date"],
-form input[type="datetime-local"],
-form input[type="number"],
+form input[type="submit"],
 form select {
-    width: 90%; /* Make inputs take up most of the width */
-    padding: 8px; /* Reduce padding */
-    margin: 8px 0; /* Reduce margin */
+    width: 95%; /* Make inputs take up most of the width */
+    padding: 6px; /* Reduce padding */
+    margin: 6px 0; /* Reduce margin */
     border: 1px solid #00008b; /* Blue border */
     border-radius: 4px;
-    font-size: 0.9rem; /* Decrease font size */
+    font-size: 0.8rem; /* Smaller font size */
     box-sizing: border-box;
 }
 
 /* Submit button styling */
 form input[type="submit"] {
-    width: 90%; /* Ensure submit button matches other inputs */
-    padding: 10px;
     background-color: #00008b; /* Navy blue background */
     color: white;
     cursor: pointer;
     border: none;
-    font-size: 0.95rem; /* Slightly larger font for submit button */
     transition: background-color 0.3s ease;
+    font-size: 0.85rem; /* Smaller font size */
+    padding: 8px; /* Adjust padding */
 }
 
 form input[type="submit"]:hover {
@@ -61,7 +65,7 @@ form input[type="submit"]:hover {
 p.error {
     color: red; /* Highlight errors in red */
     font-weight: bold;
-    font-size: 0.9rem; /* Decrease font size */
+    font-size: 0.8rem; /* Smaller font size for errors */
 }
 
 /* Links */
@@ -69,7 +73,7 @@ a {
     color: #00008b; /* Navy blue links */
     text-decoration: none;
     font-weight: bold;
-    font-size: 0.9rem; /* Decrease font size */
+    font-size: 0.85rem; /* Smaller font size */
 }
 
 a:hover {
