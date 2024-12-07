@@ -1,12 +1,12 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from db_connection import get_db_connection
 from datetime import datetime, timedelta
 import bcrypt
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote, unquote_plus
 from markupsafe import Markup
+import uuid
 
-from urllib.parse import unquote_plus
 
  
 app = Flask(__name__)
@@ -14,7 +14,7 @@ app.secret_key = 'your_secret_key'
 
 @app.route('/')
 def index():
-    return render_template('index.html')  # Ensure you have an 'index.html' template
+    return render_template('index.html')
 
 @app.template_filter('url_encode')
 def url_encode(s):
@@ -26,12 +26,10 @@ def url_encode(s):
 def url_encode(s):
     return quote(str(s))
 
-from flask import flash  # Import flash for messaging
 
 @app.route('/register_customer', methods=['GET', 'POST'])
 def register_customer():
     if request.method == 'POST':
-        # Collect form data
         email = request.form['email']
         password = request.form['password']
         fname = request.form['fname']
@@ -64,7 +62,7 @@ def register_customer():
                 passport_country, dob
             ))
             conn.commit()
-            # Instead of rendering the login template, redirect to the login route
+            # Redirect to the login route
             flash("Registration successful. Please log in.")
             return redirect(url_for('login'))
         except Exception as e:
@@ -78,12 +76,9 @@ def register_customer():
 
 
 
-from flask import flash  # Import flash for messaging
-
 @app.route('/register_staff', methods=['GET', 'POST'])
 def register_staff():
     if request.method == 'POST':
-        # Collect form data
         username = request.form['username']
         password = request.form['password']
         fname = request.form['fname']
@@ -103,7 +98,6 @@ def register_staff():
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (username, hashed_password.decode('utf-8'), fname, lname, dob, airline_name))
             conn.commit()
-            # Use flash to pass a success message
             flash("Registration successful. Please log in.")
             # Redirect to the login route
             return redirect(url_for('login'))
@@ -130,7 +124,6 @@ def login():
         cursor = conn.cursor(dictionary=True)
 
         if user_type == 'customer':
-            # Login for customer
             cursor.execute("SELECT * FROM Customer WHERE Email = %s", (username_or_email,))
             user = cursor.fetchone()
             if user and bcrypt.checkpw(password.encode('utf-8'), user['Password'].encode('utf-8')):
@@ -141,7 +134,6 @@ def login():
                 error = 'Invalid email or password.'
                 return render_template('login.html', error=error)
         elif user_type == 'staff':
-            # Login for staff
             cursor.execute("SELECT * FROM Airline_Staff WHERE Username = %s", (username_or_email,))
             user = cursor.fetchone()
             if user and bcrypt.checkpw(password.encode('utf-8'), user['Password'].encode('utf-8')):
@@ -189,9 +181,6 @@ def customer_home():
     return render_template('customer_home.html', flights=flights)
 
 
-
-# app.py (continued)
-
 @app.route('/search_flights', methods=['GET', 'POST'])
 def search_flights():
     if request.method == 'POST':
@@ -214,8 +203,6 @@ def search_flights():
     return render_template('search_flights.html')
 
 
-# app.py (continued)
-
 @app.route('/flight_status', methods=['GET', 'POST'])
 def flight_status():
     if request.method == 'POST':
@@ -237,11 +224,6 @@ def flight_status():
         return render_template('flight_status_result.html', status=status)
     return render_template('flight_status.html')
 
-# app.py (continued)
-
-
-
-# app.py (continued)
 
 @app.route('/my_flights')
 def my_flights():
@@ -269,11 +251,6 @@ def my_flights():
     return render_template('my_flights.html', flights=flights)
 
 
-# app.py (continued)
-
-from datetime import datetime
-import uuid
-from urllib.parse import unquote_plus
 
 @app.route('/purchase_ticket/<airline_name>/<flight_num>/<departure_date_time>', methods=['GET', 'POST'])
 def purchase_ticket(airline_name, flight_num, departure_date_time):
@@ -288,7 +265,7 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # Fetch flight details along with the number of seats
+        # Fetch flight details + number of seats
         cursor.execute("""
             SELECT Flight.*, Airplane.Num_seats
             FROM Flight
@@ -307,9 +284,7 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
             error = 'No seats available on this flight.'
             return render_template('error.html', error=error)
 
-        # Handle POST request for purchasing the ticket
         if request.method == 'POST':
-            # Collect form data
             traveler_Fname = request.form['traveler_Fname']
             traveler_Lname = request.form['traveler_Lname']
             traveler_DOB = request.form['traveler_DOB']
@@ -320,20 +295,14 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
 
             # Generate a new Ticket_ID using UUID
             new_ticket_id = str(uuid.uuid4())
-
-            # Get Sold_Price from the flight's Base_price
             sold_price = flight['Base_price']
+            purchase_date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Format datetime into a string
 
-            # Get current time for Purchase_date_time
-            purchase_date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-            # Use exact values from the flight for foreign key columns
             fk_airline_name = flight['Airline_name']
             fk_flight_num = flight['Flight_num']
             fk_departure_date_time = flight['Departure_date_time'].strftime('%Y-%m-%d %H:%M:%S')
 
-            # Format dates properly
-            traveler_DOB_formatted = datetime.strptime(traveler_DOB, '%Y-%m-%d').strftime('%Y-%m-%d')
+            traveler_DOB_formatted = datetime.strptime(traveler_DOB, '%Y-%m-%d').strftime('%Y-%m-%d') # Format string into datetime
             expiration_date_formatted = datetime.strptime(expiration_date, '%Y-%m-%d').strftime('%Y-%m-%d')
 
             # Insert into Ticket table
@@ -358,12 +327,10 @@ def purchase_ticket(airline_name, flight_num, departure_date_time):
 
             conn.commit()
 
-            # After successful purchase
             message = 'Ticket purchased successfully.'
             return render_template('success.html', message=message)
     except Exception as e:
         conn.rollback()
-        # Log the error for debugging
         app.logger.error(f'Error purchasing ticket: {e}')
         error = f'An error occurred: {str(e)}'
         return render_template('error.html', error=error)
@@ -387,7 +354,6 @@ def track_spending():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # Adjusted query with correct column names
         query = """
             SELECT SUM(Ticket.Sold_price) AS total_spent
             FROM Ticket
@@ -413,7 +379,6 @@ def cancel_trip():
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Handle POST request (cancel the trip)
         if request.method == 'POST':
             ticket_id = request.form.get('ticket_id')
             if ticket_id:
@@ -421,7 +386,7 @@ def cancel_trip():
                     # Start a transaction
                     conn.start_transaction()
                     
-                    # Step 1: Retrieve flight details associated with the ticket
+                    # Retrieve flight details associated with the ticket
                     select_query = """
                         SELECT Airline_name, Flight_num, Departure_date_time
                         FROM Ticket
@@ -436,11 +401,11 @@ def cancel_trip():
                         flight_num = flight['Flight_num']
                         departure_date_time = flight['Departure_date_time']
                         
-                        # Step 2: Delete the ticket
+                        # Delete the ticket
                         delete_query = "DELETE FROM Ticket WHERE Ticket_ID = %s"
                         cursor.execute(delete_query, (ticket_id,))
                         
-                        # Step 3: Decrement Seats_booked in Flight
+                        # Decrement number of seats booked
                         update_query = """
                             UPDATE Flight
                             SET Seats_booked = Seats_booked - 1
@@ -501,7 +466,7 @@ def rate_flights():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # Fetch past flights
+        # Find past flights
         cursor.execute("""
             SELECT Flight.*, Ticket.Ticket_ID, Flight.Departure_date_time
             FROM Flight
@@ -558,7 +523,7 @@ def rate_flight(ticket_id):
                 error = 'Rating must be an integer between 1 and 5.'
                 return render_template('rate_flight.html', flight=flight, error=error, review=None)
 
-            # Insert or update review in the 'reviews' table
+            # Insert/update review into Reviews table
             cursor.execute("""
                 INSERT INTO reviews (Email, Airline_name, Flight_num, Departure_date_time, Ratings, Comments)
                 VALUES (%s, %s, %s, %s, %s, %s)
@@ -572,7 +537,6 @@ def rate_flight(ticket_id):
             return render_template('success.html', message=message)
     except Exception as e:
         conn.rollback()
-        # Log the error for debugging
         app.logger.error(f'Error in rate_flight: {e}')
         error = f'An error occurred: {str(e)}'
         return render_template('error.html', error=error)
@@ -580,7 +544,7 @@ def rate_flight(ticket_id):
         cursor.close()
         conn.close()
 
-    # Fetch existing review if any
+    # Find existing review if any
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -606,7 +570,7 @@ def staff_home():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get the airline name associated with the staff member
+    # Get airline name
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
     airline = cursor.fetchone()['Airline_name']
 
@@ -615,7 +579,6 @@ def staff_home():
     default_end_date = today + timedelta(days=30)
 
     if request.method == 'POST':
-        # Collect filter criteria from the form
         start_date = request.form.get('start_date') or today.strftime('%Y-%m-%d')
         end_date = request.form.get('end_date') or default_end_date.strftime('%Y-%m-%d')
         source = request.form.get('source')
@@ -687,7 +650,7 @@ def create_flight():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
-    # Get airline name associated with the staff member
+    # Get airline name
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
     airline = cursor.fetchone()['Airline_name']
     
@@ -710,7 +673,6 @@ def create_flight():
         plane_id = request.form['plane_id']
         seats_booked = request.form['seats_booked']
         
-        # Data validation
         # Ensure seats_booked is a non-negative integer
         if not seats_booked.isdigit() or int(seats_booked) < 0:
             error = "Seats booked must be a non-negative integer."
@@ -737,7 +699,6 @@ def create_flight():
             error = "Departure and arrival airports cannot be the same."
             return render_template('create_flight.html', airplanes=airplanes, airports=airports, error=error)
         
-        # Insert flight into database
         try:
             cursor.execute("""
                 INSERT INTO Flight (Airline_name, Flight_num, Departure_date_time, Arrival_date_time, Departure_airport,
@@ -807,7 +768,7 @@ def add_airplane():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get airline name associated with the staff member
+    # Get airline name
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
     airline = cursor.fetchone()['Airline_name']
 
@@ -827,7 +788,7 @@ def add_airplane():
             conn.commit()
             message = "Airplane added successfully."
 
-            # Fetch all airplanes to display
+            # Find all airplanes to display
             cursor.execute("SELECT * FROM Airplane WHERE Airline_name = %s", (airline,))
             airplanes = cursor.fetchall()
             return render_template('view_airplanes.html', airplanes=airplanes, message=message)
@@ -894,7 +855,7 @@ def view_ratings():
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
     airline = cursor.fetchone()['Airline_name']
 
-    # Fetch flights with average ratings
+    # Find flights and their average ratings
     cursor.execute("""
         SELECT Flight.Flight_num, Flight.Departure_date_time,
                AVG(Reviews.Ratings) AS average_rating
@@ -949,11 +910,11 @@ def schedule_maintenance():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get airline name associated with the staff member
+    # Get airline name
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
     airline = cursor.fetchone()['Airline_name']
 
-    # Fetch airplanes owned by the airline
+    # Find the airplanes owned by the airline
     cursor.execute("SELECT * FROM Airplane WHERE Airline_name = %s", (airline,))
     airplanes = cursor.fetchall()
 
@@ -964,7 +925,6 @@ def schedule_maintenance():
 
         # Check if airplane is available (not under maintenance or assigned to a flight during that period)
         try:
-            # Adjusted column names to match database schema
             cursor.execute("""
                 SELECT * FROM Maintenance
                 WHERE Airline_name = %s AND Plane_ID = %s
@@ -976,7 +936,7 @@ def schedule_maintenance():
             """, (airline, plane_id, start_datetime, end_datetime, start_datetime, end_datetime))
             maintenance_conflicts = cursor.fetchall()
 
-            # Check for flights assigned to the airplane during that period
+            # Check is airplane is assigned to any flights
             cursor.execute("""
                 SELECT * FROM Flight
                 WHERE Airline_name = %s AND Plane_ID = %s
@@ -992,7 +952,6 @@ def schedule_maintenance():
                 error = "The airplane is already scheduled for maintenance or assigned to a flight during this period."
                 return render_template('schedule_maintenance.html', airplanes=airplanes, error=error)
 
-            # Schedule maintenance
             cursor.execute("""
                 INSERT INTO Maintenance (Airline_name, Plane_ID, Start_date_time, End_date_time)
                 VALUES (%s, %s, %s, %s)
@@ -1026,7 +985,7 @@ def view_frequent_customers():
     # Calculate date one year ago
     one_year_ago = datetime.now() - timedelta(days=365)
 
-    # Get frequent customers
+    # Get frequent customers, ordering them from most frequent to least
     cursor.execute("""
         SELECT Customer.Email, Customer.Fname, Customer.Lname, COUNT(*) AS flight_count
         FROM Ticket
@@ -1044,7 +1003,7 @@ def view_frequent_customers():
 
 
 @app.route('/view_customer_flights/<customer_email>')
-def view_customer_flights(customer_email):
+def view_customer_flights(customer_email): # Used when looking at frequent customers
     if 'username' not in session or session['user_type'] != 'staff':
         return redirect(url_for('login'))
 
@@ -1086,7 +1045,6 @@ def view_revenue():
     cursor.execute("SELECT Airline_name FROM Airline_Staff WHERE Username = %s", (username,))
     airline = cursor.fetchone()[0]
 
-    # Calculate dates
     today = datetime.now()
     one_month_ago = today - timedelta(days=30)
     one_year_ago = today - timedelta(days=365)
