@@ -8,7 +8,8 @@ from markupsafe import Markup
 import uuid
 
 
- 
+# Initializes a Flask application and sets a secret key for securing 
+# sessions, flash messages, and cryptographic operations.
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
