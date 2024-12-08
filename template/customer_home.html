@@ -4,6 +4,7 @@
 <h2>Welcome, {{ session['username'] }}</h2>
 <ul>
     <li><a href="{{ url_for('my_flights') }}">View My Flights</a></li>
+    <!-- the code below implictly contains two use cases with both searching and purchasing flights -->
     <li><a href="{{ url_for('search_flights') }}">Search and Purchase Flights</a></li>
     <li><a href="{{ url_for('cancel_trip') }}">Cancel a Trip</a></li>
     <li><a href="{{ url_for('rate_flights') }}">Rate and Comment on Flights</a></li>
